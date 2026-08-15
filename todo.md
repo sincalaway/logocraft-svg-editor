@@ -83,3 +83,11 @@
 - [x] 撰写 README 与独立部署指南。
 - [x] 完成类型检查、生产构建和视觉复核。
 - [x] 创建独立 GitHub 仓库并推送最终代码。
+
+## 部署指南与开源发布
+
+- [x] 核验现有部署文档、构建目录和独立仓库配置。
+- [x] 在 README 中补充 Cloudflare Pages 与 Cloudflare Workers 静态托管步骤。
+- [x] 在部署指南中补充 Nginx 自托管服务器配置与 HTTPS 建议。
+- [x] 添加 MIT 开源许可证并更新 README 的许可证说明。
+- [x] 核验文档并提交更新到独立 GitHub 仓库。

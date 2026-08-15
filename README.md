@@ -29,6 +29,12 @@ pnpm check
 pnpm build
 ```
 
+## 部署与开源
+
+项目可部署到 Cloudflare Pages、Cloudflare 的直接部署流程，或任意 Nginx 静态服务器。仓库根目录的 [DEPLOYMENT.md](./DEPLOYMENT.md) 提供 Cloudflare Pages、Wrangler、Nginx 和 HTTPS 的完整步骤。
+
+LogoCraft 采用 [MIT License](./LICENSE) 发布。你可以自由使用、修改和分发项目，但应保留许可证与版权声明。
+
 ## 批量导出命名规则
 
 批量交付面板支持以下占位符：
