@@ -49,12 +49,16 @@ type DesignElement = {
   content?: string; fontSize?: number; fontFamily?: string; shape?: "spark" | "circle" | "square" | "arc"; src?: string; locked?: boolean; hidden?: boolean;
 };
 type LayerGroup = { id: string; name: string; elementIds: string[]; collapsed?: boolean };
-type Project = { id: string; name: string; elements: DesignElement[]; groups: LayerGroup[]; modifiedAt: string };
+type ReferenceLine = { id: string; axis: "x" | "y"; position: number };
+type HistoryMeta = Record<number, { name?: string; favorite?: boolean }>;
+type Project = { id: string; name: string; elements: DesignElement[]; groups: LayerGroup[]; referenceLines: ReferenceLine[]; historyMeta: HistoryMeta; modifiedAt: string };
 type Guide = { axis: "x" | "y"; position: number };
 type Interaction =
   | { kind: "move"; ids: string[]; startX: number; startY: number; bases: Record<string, Pick<DesignElement, "x" | "y">> }
   | { kind: "resize"; id: string; handle: ResizeHandle; startX: number; startY: number; base: DesignElement }
   | { kind: "rotate"; id: string; startAngle: number; base: DesignElement }
+  | { kind: "groupRotate"; ids: string[]; centerX: number; centerY: number; startAngle: number; bases: Record<string, DesignElement> }
+  | { kind: "groupScale"; ids: string[]; centerX: number; centerY: number; startDistance: number; bases: Record<string, DesignElement> }
   | { kind: "marquee"; startX: number; startY: number; currentX: number; currentY: number; additive: boolean };
 type Preset = { id: string; name: string; note: string; thumbnail: string; elements: Omit<DesignElement, "id">[] };
 
@@ -75,7 +79,7 @@ const presets: Preset[] = [
 
 const uid = (prefix: string) => `${prefix}-${Math.random().toString(36).slice(2, 8)}`;
 const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
-const freshProject = (name = "Untitled mark", elements = initialElements, groups: LayerGroup[] = []): Project => ({ id: uid("project"), name, elements, groups, modifiedAt: new Date().toISOString() });
+const freshProject = (name = "Untitled mark", elements = initialElements, groups: LayerGroup[] = [], referenceLines: ReferenceLine[] = []): Project => ({ id: uid("project"), name, elements, groups, referenceLines, historyMeta: {}, modifiedAt: new Date().toISOString() });
 
 function MarkGlyph({ color = "#1C1A18" }: { color?: string }) {
   return <svg viewBox="0 0 240 180" width="100%" height="100%" aria-hidden="true"><path d="M69 46v78c0 10 8 18 18 18h53" fill="none" stroke={color} strokeWidth="20" strokeLinecap="round" strokeLinejoin="round" /><path d="M181 69c-10-15-26-24-45-24-30 0-54 21-54 47s24 47 54 47c19 0 35-10 45-24" fill="none" stroke={color} strokeWidth="20" strokeLinecap="round" /><circle cx="185" cy="136" r="10" fill="#FF6B35" /></svg>;
@@ -92,10 +96,14 @@ function ResizeHandles({ onPointerDown }: { onPointerDown: (event: ReactPointerE
   ];
   return <>{handles.map((handle) => <button key={handle.key} aria-label={handle.label} className={`resize-handle absolute z-20 ${handle.className}`} onPointerDown={(event) => onPointerDown(event, handle.key)} />)}</>;
 }
+function MultiTransformBox({ bounds, ids }: { bounds: { left: number; top: number; width: number; height: number; centerX: number; centerY: number }; ids: string[] }) {
+  const dispatch = (kind: "rotate" | "scale", event: ReactPointerEvent<HTMLButtonElement>) => { event.preventDefault(); event.stopPropagation(); window.dispatchEvent(new CustomEvent("logocraft-group-transform", { detail: { kind, ids, clientX: event.clientX, clientY: event.clientY, centerX: bounds.centerX, centerY: bounds.centerY } })); };
+  return <div className="multi-transform-box" style={{ left: bounds.left, top: bounds.top, width: bounds.width, height: bounds.height }}><span className="multi-transform-stem" /><button className="multi-rotate-handle" aria-label="整体旋转所选图层" onPointerDown={(event) => dispatch("rotate", event)}>↻</button><button className="multi-scale-handle" aria-label="整体缩放所选图层" onPointerDown={(event) => dispatch("scale", event)}>↗</button><span className="multi-transform-label">{ids.length} LAYERS</span></div>;
+}
 function DesignObject({ element, selected, allowResize, onPointerDown, onResizePointerDown }: { element: DesignElement; selected: boolean; allowResize: boolean; onPointerDown: (event: ReactPointerEvent<HTMLDivElement>) => void; onResizePointerDown: (event: ReactPointerEvent<HTMLButtonElement>, handle: ResizeHandle) => void }) {
   if (element.hidden) return null;
   const content = element.type === "mark" ? <MarkGlyph color={element.fill} /> : element.type === "shape" ? <ShapeGlyph shape={element.shape} fill={element.fill} /> : element.type === "image" ? <img src={element.src} className="h-full w-full object-contain" draggable={false} alt="已上传的图形" /> : <div className="flex h-full w-full items-center justify-center whitespace-nowrap text-center font-bold leading-none" style={{ color: element.fill, fontSize: element.fontSize, fontFamily: element.fontFamily }}>{element.content}</div>;
-  return <div className={`absolute touch-none select-none ${selected ? "selection-outline" : ""} ${element.locked ? "cursor-not-allowed" : ""}`} style={{ left: element.x, top: element.y, width: element.width, height: element.height, transform: `rotate(${element.rotation}deg)`, cursor: element.locked ? "not-allowed" : "grab" }} onPointerDown={onPointerDown} role="button" aria-label={`选择 ${element.name}`}>{content}{selected && !element.locked && allowResize && <><ResizeHandles onPointerDown={onResizePointerDown} /><span className="rotate-stem" /><button aria-label="旋转对象" className="rotate-handle" onPointerDown={(event) => { event.preventDefault(); event.stopPropagation(); window.dispatchEvent(new CustomEvent("logocraft-rotate", { detail: { id: element.id, clientX: event.clientX, clientY: event.clientY } })); }}>↻</button></>}{selected && element.locked && <span className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full border border-white/70 bg-[#1e1e21] text-[#ff6b35]"><Lock size={10} /></span>}</div>;
+  return <div className={`absolute touch-none select-none ${selected ? "selection-outline" : ""} ${element.locked ? "cursor-not-allowed" : ""}`} style={{ left: element.x, top: element.y, width: element.width, height: element.height, transform: `rotate(${element.rotation}deg)`, cursor: element.locked ? "not-allowed" : "grab" }} onPointerDown={onPointerDown} role="button" aria-label={`选择 ${element.name}`}>{content}{selected && !element.locked && allowResize && <><ResizeHandles onPointerDown={onResizePointerDown} /><span className="rotate-stem" /><button aria-label="旋转对象" className="rotate-handle" onPointerDown={(event) => { event.preventDefault(); event.stopPropagation(); window.dispatchEvent(new CustomEvent("logocraft-rotate", { detail: { id: element.id, clientX: event.clientX, clientY: event.clientY } })); }}>↻</button></>}{selected && !allowResize && <div className="multi-corner-controls"><button aria-label="整体旋转所选图层" onPointerDown={(event) => { event.preventDefault(); event.stopPropagation(); window.dispatchEvent(new CustomEvent("logocraft-group-transform", { detail: { kind: "rotate", clientX: event.clientX, clientY: event.clientY } })); }}>↻</button><button aria-label="整体缩放所选图层" onPointerDown={(event) => { event.preventDefault(); event.stopPropagation(); window.dispatchEvent(new CustomEvent("logocraft-group-transform", { detail: { kind: "scale", clientX: event.clientX, clientY: event.clientY } })); }}>↗</button></div>}{selected && element.locked && <span className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full border border-white/70 bg-[#1e1e21] text-[#ff6b35]"><Lock size={10} /></span>}</div>;
 }
 function makeSvg(elements: DesignElement[]) {
   const body = elements.filter((element) => !element.hidden).map((el) => {
@@ -114,6 +122,8 @@ function makeSvg(elements: DesignElement[]) {
 export default function Home() {
   const [elements, setElements] = useState<DesignElement[]>(initialElements);
   const [groups, setGroups] = useState<LayerGroup[]>([]);
+  const [referenceLines, setReferenceLines] = useState<ReferenceLine[]>([]);
+  const [guideDrag, setGuideDrag] = useState<{ id: string; axis: "x" | "y" } | null>(null);
   const [projects, setProjects] = useState<Project[]>([freshProject()]);
   const [activeProjectId, setActiveProjectId] = useState(projects[0].id);
   const [projectReady, setProjectReady] = useState(false);
@@ -121,6 +131,7 @@ export default function Home() {
   const [history, setHistory] = useState<DesignElement[][]>([initialElements]);
   const [historyIndex, setHistoryIndex] = useState(0);
   const [historyLabels, setHistoryLabels] = useState<string[]>(["初始构图"]);
+  const [historyMeta, setHistoryMeta] = useState<HistoryMeta>({});
   const [styleClipboard, setStyleClipboard] = useState<Pick<DesignElement, "fill" | "fontSize" | "fontFamily" | "rotation"> | null>(null);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
@@ -136,10 +147,12 @@ export default function Home() {
   const [projectStatus, setProjectStatus] = useState<"loading" | "saving" | "saved">("loading");
   const stageRef = useRef<HTMLDivElement>(null);
   const elementsRef = useRef(elements);
+  const selectedIdsRef = useRef(selectedIds);
   const fileRef = useRef<HTMLInputElement>(null);
   const jsonRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => { elementsRef.current = elements; }, [elements]);
+  useEffect(() => { selectedIdsRef.current = selectedIds; }, [selectedIds]);
   useEffect(() => {
     const beginRotation = (event: Event) => {
       const detail = (event as CustomEvent<{ id: string; clientX: number; clientY: number }>).detail;
@@ -154,6 +167,29 @@ export default function Home() {
     return () => window.removeEventListener("logocraft-rotate", beginRotation);
   }, [zoom]);
   useEffect(() => {
+    const beginTransform = (event: Event) => {
+      const detail = (event as CustomEvent<{ kind: "rotate" | "scale"; ids?: string[]; clientX: number; clientY: number; centerX?: number; centerY?: number }>).detail;
+      const rect = stageRef.current?.getBoundingClientRect(); if (!rect) return;
+      const ids = detail.ids ?? selectedIdsRef.current; const targets = elementsRef.current.filter((item) => ids.includes(item.id)); if (targets.length < 2) return;
+      const centerX = detail.centerX ?? (Math.min(...targets.map((item) => item.x)) + Math.max(...targets.map((item) => item.x + item.width))) / 2;
+      const centerY = detail.centerY ?? (Math.min(...targets.map((item) => item.y)) + Math.max(...targets.map((item) => item.y + item.height))) / 2;
+      const bases = Object.fromEntries(ids.map((id) => { const element = elementsRef.current.find((item) => item.id === id); return element ? [id, element] : null; }).filter(Boolean) as Array<[string, DesignElement]>);
+      const x = (detail.clientX - rect.left) / zoom; const y = (detail.clientY - rect.top) / zoom;
+      if (detail.kind === "rotate") setInteraction({ kind: "groupRotate", ids, centerX, centerY, startAngle: Math.atan2(y - centerY, x - centerX) * 180 / Math.PI, bases });
+      else setInteraction({ kind: "groupScale", ids, centerX, centerY, startDistance: Math.max(1, Math.hypot(x - centerX, y - centerY)), bases });
+    };
+    const beginReference = (event: Event) => { const detail = (event as CustomEvent<{ id: string; axis: "x" | "y"; pointerId: number }>).detail; stageRef.current?.setPointerCapture(detail.pointerId); setGuideDrag({ id: detail.id, axis: detail.axis }); };
+    window.addEventListener("logocraft-group-transform", beginTransform); window.addEventListener("logocraft-reference-begin", beginReference);
+    return () => { window.removeEventListener("logocraft-group-transform", beginTransform); window.removeEventListener("logocraft-reference-begin", beginReference); };
+  }, [zoom]);
+  useEffect(() => {
+    const createReference = (event: Event) => { const axis = (event as CustomEvent<{ axis: "x" | "y" }>).detail.axis; setReferenceLines((previous) => [...previous, { id: uid("guide"), axis, position: axis === "x" ? CANVAS.width / 2 : CANVAS.height / 2 }]); };
+    const deleteReference = (event: Event) => setReferenceLines((previous) => previous.filter((line) => line.id !== (event as CustomEvent<string>).detail));
+    const publishReference = () => window.dispatchEvent(new CustomEvent("logocraft-reference-updated", { detail: referenceLines }));
+    window.addEventListener("logocraft-reference-create", createReference); window.addEventListener("logocraft-reference-delete", deleteReference); window.addEventListener("logocraft-reference-request", publishReference); publishReference();
+    return () => { window.removeEventListener("logocraft-reference-create", createReference); window.removeEventListener("logocraft-reference-delete", deleteReference); window.removeEventListener("logocraft-reference-request", publishReference); };
+  }, [referenceLines]);
+  useEffect(() => {
     try {
       const raw = window.localStorage.getItem(PROJECTS_KEY);
       const legacy = window.localStorage.getItem(LEGACY_DRAFT_KEY);
@@ -161,14 +197,14 @@ export default function Home() {
         const stored = JSON.parse(raw) as { activeProjectId?: string; projects?: Project[] };
         if (Array.isArray(stored.projects) && stored.projects.length) {
           const active = stored.projects.find((project) => project.id === stored.activeProjectId) ?? stored.projects[0];
-          setProjects(stored.projects); setActiveProjectId(active.id); setElements(active.elements); setGroups(active.groups ?? []); setDesignName(active.name); setHistory([active.elements]); setHistoryIndex(0); setHistoryLabels(["恢复工程"]); setSelectedIds(active.elements[0] ? [active.elements[0].id] : []);
+          setProjects(stored.projects); setActiveProjectId(active.id); setElements(active.elements); setGroups(active.groups ?? []); setReferenceLines(active.referenceLines ?? []); setHistoryMeta(active.historyMeta ?? {}); setDesignName(active.name); setHistory([active.elements]); setHistoryIndex(0); setHistoryLabels(["恢复工程"]); setSelectedIds(active.elements[0] ? [active.elements[0].id] : []);
           toast.message("已恢复本地工程集合。");
         }
       } else if (legacy) {
         const old = JSON.parse(legacy) as { elements?: DesignElement[]; designName?: string };
         if (Array.isArray(old.elements) && old.elements.length) {
           const migrated = freshProject(old.designName || "已迁移草稿", old.elements, []);
-          setProjects([migrated]); setActiveProjectId(migrated.id); setElements(migrated.elements); setGroups([]); setDesignName(migrated.name); setHistory([migrated.elements]); setHistoryIndex(0); setHistoryLabels(["迁移旧草稿"]); setSelectedIds(migrated.elements[0] ? [migrated.elements[0].id] : []);
+          setProjects([migrated]); setActiveProjectId(migrated.id); setElements(migrated.elements); setGroups([]); setReferenceLines([]); setHistoryMeta({}); setDesignName(migrated.name); setHistory([migrated.elements]); setHistoryIndex(0); setHistoryLabels(["迁移旧草稿"]); setSelectedIds(migrated.elements[0] ? [migrated.elements[0].id] : []);
           toast.message("旧草稿已迁移为独立工程。");
         }
       }
@@ -180,11 +216,11 @@ export default function Home() {
     if (!projectReady) return;
     setProjectStatus("saving");
     const timer = window.setTimeout(() => {
-      setProjects((previous) => previous.map((project) => project.id === activeProjectId ? { ...project, name: designName || "Untitled mark", elements, groups, modifiedAt: new Date().toISOString() } : project));
+      setProjects((previous) => previous.map((project) => project.id === activeProjectId ? { ...project, name: designName || "Untitled mark", elements, groups, referenceLines, historyMeta, modifiedAt: new Date().toISOString() } : project));
       setProjectStatus("saved");
     }, 400);
     return () => window.clearTimeout(timer);
-  }, [projectReady, activeProjectId, designName, elements, groups]);
+  }, [projectReady, activeProjectId, designName, elements, groups, referenceLines, historyMeta]);
   useEffect(() => {
     if (!projectReady) return;
     const timer = window.setTimeout(() => window.localStorage.setItem(PROJECTS_KEY, JSON.stringify({ version: 3, activeProjectId, projects })), 500);
@@ -196,6 +232,12 @@ export default function Home() {
   const visibleLayerCount = elements.filter((element) => !element.hidden).length;
   const scaledWidth = CANVAS.width * zoom; const scaledHeight = CANVAS.height * zoom;
   const groupedIds = useMemo(() => new Set(groups.flatMap((group) => group.elementIds)), [groups]);
+  const selectionBounds = useMemo(() => {
+    if (selectedElements.length < 2) return null;
+    const left = Math.min(...selectedElements.map((element) => element.x)); const right = Math.max(...selectedElements.map((element) => element.x + element.width));
+    const top = Math.min(...selectedElements.map((element) => element.y)); const bottom = Math.max(...selectedElements.map((element) => element.y + element.height));
+    return { left, top, width: right - left, height: bottom - top, centerX: (left + right) / 2, centerY: (top + bottom) / 2 };
+  }, [selectedElements]);
 
   const commit = useCallback((next: DesignElement[], label = "编辑图层") => {
     setElements(next);
@@ -214,8 +256,8 @@ export default function Home() {
   const resolveSnap = (ids: string[], bases: Record<string, Pick<DesignElement, "x" | "y">>, dx: number, dy: number) => {
     const moving = elements.filter((element) => ids.includes(element.id));
     const targets = elements.filter((element) => !ids.includes(element.id) && !element.hidden);
-    const xTargets = [0, CANVAS.width / 2, CANVAS.width, ...targets.flatMap((element) => [element.x, element.x + element.width / 2, element.x + element.width])];
-    const yTargets = [0, CANVAS.height / 2, CANVAS.height, ...targets.flatMap((element) => [element.y, element.y + element.height / 2, element.y + element.height])];
+    const xTargets = [0, CANVAS.width / 2, CANVAS.width, ...referenceLines.filter((line) => line.axis === "x").map((line) => line.position), ...targets.flatMap((element) => [element.x, element.x + element.width / 2, element.x + element.width])];
+    const yTargets = [0, CANVAS.height / 2, CANVAS.height, ...referenceLines.filter((line) => line.axis === "y").map((line) => line.position), ...targets.flatMap((element) => [element.y, element.y + element.height / 2, element.y + element.height])];
     let nextX = dx; let nextY = dy; const nextGuides: Guide[] = [];
     let bestX: { distance: number; correction: number; position: number } | null = null;
     let bestY: { distance: number; correction: number; position: number } | null = null;
@@ -240,15 +282,20 @@ export default function Home() {
   const onRotatePointerDown = (event: ReactPointerEvent<HTMLButtonElement>) => { event.preventDefault(); event.stopPropagation(); if (!selected || selected.locked) return; const point = pointOnCanvas(event.clientX, event.clientY); const centerX = selected.x + selected.width / 2; const centerY = selected.y + selected.height / 2; const startAngle = Math.atan2(point.y - centerY, point.x - centerX) * 180 / Math.PI; stageRef.current?.setPointerCapture(event.pointerId); setInteraction({ kind: "rotate", id: selected.id, startAngle, base: selected }); };
   const onStagePointerDown = (event: ReactPointerEvent<HTMLDivElement>) => { if (event.target !== event.currentTarget || activeTool !== "pointer") return; const point = pointOnCanvas(event.clientX, event.clientY); stageRef.current?.setPointerCapture(event.pointerId); if (!event.shiftKey) setSelectedIds([]); setInteraction({ kind: "marquee", startX: point.x, startY: point.y, currentX: point.x, currentY: point.y, additive: event.shiftKey }); };
   const onStagePointerMove = (event: ReactPointerEvent<HTMLDivElement>) => {
-    if (!interaction) return; const point = pointOnCanvas(event.clientX, event.clientY);
+    const point = pointOnCanvas(event.clientX, event.clientY);
+    if (guideDrag) { setReferenceLines((previous) => previous.map((line) => line.id === guideDrag.id ? { ...line, position: clamp(guideDrag.axis === "x" ? point.x : point.y, 0, guideDrag.axis === "x" ? CANVAS.width : CANVAS.height) } : line)); return; }
+    if (!interaction) return;
     if (interaction.kind === "marquee") { setInteraction({ ...interaction, currentX: point.x, currentY: point.y }); return; }
     if (interaction.kind === "move") { const snapped = resolveSnap(interaction.ids, interaction.bases, point.x - interaction.startX, point.y - interaction.startY); setGuides(snapped.guides); setElements((previous) => previous.map((element) => { const base = interaction.bases[element.id]; return base ? { ...element, x: clamp(base.x + snapped.dx, -element.width + MIN_SIZE, CANVAS.width - MIN_SIZE), y: clamp(base.y + snapped.dy, -element.height + MIN_SIZE, CANVAS.height - MIN_SIZE) } : element; })); return; }
     if (interaction.kind === "rotate") { const centerX = interaction.base.x + interaction.base.width / 2; const centerY = interaction.base.y + interaction.base.height / 2; const currentAngle = Math.atan2(point.y - centerY, point.x - centerX) * 180 / Math.PI; const raw = interaction.base.rotation + currentAngle - interaction.startAngle; const snap15 = Math.round(raw / 15) * 15; const snap45 = Math.round(raw / 45) * 45; const rotation = Math.abs(raw - snap45) <= 5 ? snap45 : snap15; setRotationTip(((rotation % 360) + 360) % 360); setElements((previous) => previous.map((element) => element.id === interaction.id ? { ...element, rotation } : element)); return; }
+    if (interaction.kind === "groupRotate") { const currentAngle = Math.atan2(point.y - interaction.centerY, point.x - interaction.centerX) * 180 / Math.PI; const raw = currentAngle - interaction.startAngle; const delta = Math.round(raw / 15) * 15; const radians = delta * Math.PI / 180; setRotationTip(((delta % 360) + 360) % 360); setElements((previous) => previous.map((element) => { const base = interaction.bases[element.id]; if (!base) return element; const cx = base.x + base.width / 2 - interaction.centerX; const cy = base.y + base.height / 2 - interaction.centerY; const nextCx = interaction.centerX + cx * Math.cos(radians) - cy * Math.sin(radians); const nextCy = interaction.centerY + cx * Math.sin(radians) + cy * Math.cos(radians); return { ...base, x: nextCx - base.width / 2, y: nextCy - base.height / 2, rotation: base.rotation + delta }; })); return; }
+    if (interaction.kind === "groupScale") { const distance = Math.hypot(point.x - interaction.centerX, point.y - interaction.centerY); const scale = clamp(distance / interaction.startDistance, 0.2, 4); setElements((previous) => previous.map((element) => { const base = interaction.bases[element.id]; if (!base) return element; const nextWidth = Math.max(MIN_SIZE, base.width * scale); const nextHeight = Math.max(MIN_SIZE, base.height * scale); const nextCx = interaction.centerX + (base.x + base.width / 2 - interaction.centerX) * scale; const nextCy = interaction.centerY + (base.y + base.height / 2 - interaction.centerY) * scale; return { ...base, x: nextCx - nextWidth / 2, y: nextCy - nextHeight / 2, width: nextWidth, height: nextHeight }; })); return; }
     const dx = point.x - interaction.startX; const dy = point.y - interaction.startY; const { base, handle } = interaction; let x = base.x; let y = base.y; let width = base.width; let height = base.height;
     if (handle.includes("e")) width = clamp(base.width + dx, MIN_SIZE, CANVAS.width - base.x); if (handle.includes("s")) height = clamp(base.height + dy, MIN_SIZE, CANVAS.height - base.y); if (handle.includes("w")) { x = clamp(base.x + dx, 0, base.x + base.width - MIN_SIZE); width = base.x + base.width - x; } if (handle.includes("n")) { y = clamp(base.y + dy, 0, base.y + base.height - MIN_SIZE); height = base.y + base.height - y; }
     setElements((previous) => previous.map((element) => element.id === interaction.id ? { ...element, x, y, width, height } : element));
   };
   const onStagePointerUp = () => {
+    if (guideDrag) { setGuideDrag(null); return; }
     if (!interaction) return;
     if (interaction.kind === "marquee") { const left = Math.min(interaction.startX, interaction.currentX); const top = Math.min(interaction.startY, interaction.currentY); const right = Math.max(interaction.startX, interaction.currentX); const bottom = Math.max(interaction.startY, interaction.currentY); const matched = elements.filter((element) => !element.hidden && element.x + element.width >= left && element.x <= right && element.y + element.height >= top && element.y <= bottom).map((element) => element.id); setSelectedIds((previous) => interaction.additive ? Array.from(new Set([...previous, ...matched])) : matched); } else { const current = elementsRef.current; const label = interaction.kind === "rotate" ? "旋转图层" : interaction.kind === "resize" ? "调整图层尺寸" : "移动图层"; setHistory((previous) => { const revised = [...previous.slice(0, historyIndex + 1), current]; setHistoryIndex(revised.length - 1); return revised; }); setHistoryLabels((previous) => [...previous.slice(0, historyIndex + 1), label]); }
     setGuides([]); setRotationTip(null); setInteraction(null);
@@ -282,14 +329,15 @@ export default function Home() {
   const createGroup = () => { if (selectedIds.length < 2) { toast.message("请选择至少两个图层后创建分组。"); return; } const group: LayerGroup = { id: uid("group"), name: `图层组 ${groups.length + 1}`, elementIds: selectedIds }; setGroups((previous) => [...previous.map((item) => ({ ...item, elementIds: item.elementIds.filter((id) => !selectedIds.includes(id)) })).filter((item) => item.elementIds.length), group]); toast.success("已将所选图层编入新组。"); };
   const deleteGroup = (id: string) => { setGroups((previous) => previous.filter((group) => group.id !== id)); toast.message("分组已解除，图层保持不变。"); };
   const toggleGroup = (id: string) => setGroups((previous) => previous.map((group) => group.id === id ? { ...group, collapsed: !group.collapsed } : group));
-  const activateProject = (project: Project) => { setActiveProjectId(project.id); setElements(project.elements); setGroups(project.groups ?? []); setDesignName(project.name); setHistory([project.elements]); setHistoryIndex(0); setSelectedIds([]); setZoom(1); toast.message(`已切换到「${project.name}」。`); };
+  const activateProject = (project: Project) => { setActiveProjectId(project.id); setElements(project.elements); setGroups(project.groups ?? []); setReferenceLines(project.referenceLines ?? []); setHistoryMeta(project.historyMeta ?? {}); setDesignName(project.name); setHistory([project.elements]); setHistoryIndex(0); setHistoryLabels(["切换工程"]); setSelectedIds([]); setZoom(1); toast.message(`已切换到「${project.name}」。`); };
   const createProject = () => { const project = freshProject(`草稿 ${projects.length + 1}`, initialElements, []); setProjects((previous) => [...previous, project]); activateProject(project); };
   const deleteProject = (id: string) => { if (projects.length === 1) { toast.error("至少保留一个工程草稿。"); return; } const remaining = projects.filter((project) => project.id !== id); setProjects(remaining); if (id === activeProjectId) activateProject(remaining[0]); };
-  const exportJson = () => { const payload = { format: "LogoCraft project", version: 3, name: designName, elements, groups, exportedAt: new Date().toISOString() }; const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" }); const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = `${designName.trim().replace(/\s+/g, "-").toLowerCase() || "logocraft-project"}.json`; link.click(); URL.revokeObjectURL(link.href); toast.success("JSON 工程文件已导出。"); };
-  const importJson = (event: ChangeEvent<HTMLInputElement>) => { const file = event.target.files?.[0]; if (!file) return; const reader = new FileReader(); reader.onload = () => { try { const payload = JSON.parse(String(reader.result)) as Partial<Project>; if (!Array.isArray(payload.elements)) throw new Error("invalid"); const imported = freshProject(payload.name || file.name.replace(/\.json$/i, "导入工程"), payload.elements as DesignElement[], Array.isArray(payload.groups) ? payload.groups as LayerGroup[] : []); setProjects((previous) => [...previous, imported]); activateProject(imported); toast.success("JSON 工程已导入为新的草稿。"); } catch { toast.error("无法识别该 JSON 工程文件。"); } }; reader.readAsText(file); event.target.value = ""; };
+  const exportJson = () => { const payload = { format: "LogoCraft project", version: 4, name: designName, elements, groups, referenceLines, historyMeta, exportedAt: new Date().toISOString() }; const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" }); const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = `${designName.trim().replace(/\s+/g, "-").toLowerCase() || "logocraft-project"}.json`; link.click(); URL.revokeObjectURL(link.href); toast.success("JSON 工程文件已导出。"); };
+  const importJson = (event: ChangeEvent<HTMLInputElement>) => { const file = event.target.files?.[0]; if (!file) return; const reader = new FileReader(); reader.onload = () => { try { const payload = JSON.parse(String(reader.result)) as Partial<Project>; if (!Array.isArray(payload.elements)) throw new Error("invalid"); const imported = freshProject(payload.name || file.name.replace(/\.json$/i, "导入工程"), payload.elements as DesignElement[], Array.isArray(payload.groups) ? payload.groups as LayerGroup[] : [], Array.isArray(payload.referenceLines) ? payload.referenceLines as ReferenceLine[] : []); imported.historyMeta = payload.historyMeta ?? {}; setProjects((previous) => [...previous, imported]); activateProject(imported); toast.success("JSON 工程已导入为新的草稿。"); } catch { toast.error("无法识别该 JSON 工程文件。"); } }; reader.readAsText(file); event.target.value = ""; };
   const exportSvg = () => { const blob = new Blob([makeSvg(elements)], { type: "image/svg+xml;charset=utf-8" }); const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = `${designName.trim().replace(/\s+/g, "-").toLowerCase() || "logocraft-design"}.svg`; link.click(); URL.revokeObjectURL(link.href); toast.success("SVG 已导出，保留无限缩放能力。"); };
   const exportPng = () => { const svg = makeSvg(elements); const image = new Image(); image.onload = () => { const canvas = document.createElement("canvas"); canvas.width = CANVAS.width * 2; canvas.height = CANVAS.height * 2; const context = canvas.getContext("2d"); if (!context) return; context.drawImage(image, 0, 0, canvas.width, canvas.height); const link = document.createElement("a"); link.href = canvas.toDataURL("image/png"); link.download = `${designName.trim().replace(/\s+/g, "-").toLowerCase() || "logocraft-design"}.png`; link.click(); toast.success("PNG 已导出。"); }; image.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`; };
-  useEffect(() => { const publishHistory = () => window.dispatchEvent(new CustomEvent("logocraft-history-updated", { detail: { labels: historyLabels, activeIndex: historyIndex } })); publishHistory(); window.addEventListener("logocraft-history-request", publishHistory); return () => window.removeEventListener("logocraft-history-request", publishHistory); }, [historyLabels, historyIndex]);
+  useEffect(() => { const publishHistory = () => window.dispatchEvent(new CustomEvent("logocraft-history-updated", { detail: { labels: historyLabels, activeIndex: historyIndex, meta: historyMeta } })); publishHistory(); window.addEventListener("logocraft-history-request", publishHistory); return () => window.removeEventListener("logocraft-history-request", publishHistory); }, [historyLabels, historyIndex, historyMeta]);
+  useEffect(() => { const rename = (event: Event) => { const detail = (event as CustomEvent<{ index: number; name: string }>).detail; setHistoryMeta((previous) => ({ ...previous, [detail.index]: { ...previous[detail.index], name: detail.name } })); }; const favorite = (event: Event) => { const index = (event as CustomEvent<number>).detail; setHistoryMeta((previous) => ({ ...previous, [index]: { ...previous[index], favorite: !previous[index]?.favorite } })); }; window.addEventListener("logocraft-history-rename", rename); window.addEventListener("logocraft-history-favorite", favorite); return () => { window.removeEventListener("logocraft-history-rename", rename); window.removeEventListener("logocraft-history-favorite", favorite); }; }, []);
   useEffect(() => { const onCopy = () => copyStyle(); const onPaste = () => pasteStyle(); const onRestore = (event: Event) => restoreHistory((event as CustomEvent<number>).detail); window.addEventListener("logocraft-copy-style", onCopy); window.addEventListener("logocraft-paste-style", onPaste); window.addEventListener("logocraft-history-restore", onRestore); return () => { window.removeEventListener("logocraft-copy-style", onCopy); window.removeEventListener("logocraft-paste-style", onPaste); window.removeEventListener("logocraft-history-restore", onRestore); }; });
   useEffect(() => { const keyHandler = (event: KeyboardEvent) => { const target = event.target as HTMLElement; if (target.tagName === "INPUT" || target.tagName === "SELECT") return; const meta = event.metaKey || event.ctrlKey; if (meta && event.key.toLowerCase() === "z") { event.preventDefault(); event.shiftKey ? redo() : undo(); } if (meta && event.key.toLowerCase() === "c" && selected) { event.preventDefault(); copyStyle(); } if (meta && event.key.toLowerCase() === "v" && selected) { event.preventDefault(); pasteStyle(); } if (event.key === "?") { event.preventDefault(); window.dispatchEvent(new Event("logocraft-shortcuts")); } if (event.key.toLowerCase() === "h") { event.preventDefault(); window.dispatchEvent(new Event("logocraft-history")); } if ((event.key === "Backspace" || event.key === "Delete") && selectedIds.length) { event.preventDefault(); removeSelected(); } if (event.key === "Escape") { setSelectedIds([]); setPreviewOpen(false); setShortcutsOpen(false); setHistoryOpen(false); setInteraction(null); setGuides([]); } }; window.addEventListener("keydown", keyHandler); return () => window.removeEventListener("keydown", keyHandler); });
   const numeric = (key: "x" | "y" | "width" | "height" | "rotation" | "fontSize", value: string) => updateSelected({ [key]: Number(value) } as Partial<DesignElement>);
