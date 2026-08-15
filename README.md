@@ -43,6 +43,8 @@ LogoCraft 采用 [MIT License](./LICENSE) 发布。你可以自由使用、修�
 
 每一次可发布变更都会记录在 [CHANGELOG.md](./CHANGELOG.md)。版本号、发布前检查和 GitHub Release 步骤见 [RELEASING.md](./RELEASING.md)。推送到 `main` 或创建拉取请求时，GitHub Actions 会执行 TypeScript 检查和生产构建。
 
+创建并推送形如 `v1.0.1` 的版本标签后，仓库会自动创建对应的 GitHub Release。Dependabot 会按周检查 npm 依赖、按月检查 GitHub Actions 依赖，并以拉取请求形式提供更新。
+
 ## 批量导出命名规则
 
 批量交付面板支持以下占位符：

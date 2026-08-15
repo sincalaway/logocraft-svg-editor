@@ -46,6 +46,18 @@ npx wrangler pages deploy dist/public --project-name logocraft-svg-editor
 
 首次命令会要求 Cloudflare 登录并创建或选择 Pages 项目。使用 Cloudflare DNS 时，可在 Pages 项目的 **Custom domains** 中绑定域名；DNS 生效后再检查 HTTPS 和下载行为。
 
+### GitHub 拉取请求预览部署
+
+仓库已包含 `.github/workflows/cloudflare-preview.yml`。在 GitHub 仓库的 **Settings** > **Secrets and variables** > **Actions** 中添加下表配置后，每个面向 `main` 的内部拉取请求都会构建并部署一个 Cloudflare Pages 预览。来自外部 Fork 的拉取请求不会获得密钥，工作流会安全跳过部署。
+
+| 配置位置 | 名称 | 用途 |
+| --- | --- | --- |
+| Repository secret | `CLOUDFLARE_API_TOKEN` | 具有 Account · Cloudflare Pages · Edit 权限的 API Token |
+| Repository secret | `CLOUDFLARE_ACCOUNT_ID` | Cloudflare 账户 ID |
+| Repository variable | `CLOUDFLARE_PAGES_PROJECT` | Cloudflare Pages 项目名称，例如 `logocraft-svg-editor` |
+
+预览链接由 Cloudflare Pages 为对应分支创建。Cloudflare 默认会为预览部署设置 `X-Robots-Tag: noindex`，避免预览内容进入搜索索引；若团队需要限制预览访问，可在 Pages 项目设置中启用 Access policy。[3] [4]
+
 ## 自托管服务器（Nginx）
 
 以下示例适用于 Ubuntu/Debian 服务器。先在本地或服务器的项目目录中构建，再将静态产物复制到站点目录：
@@ -125,3 +137,5 @@ Certbot 会配置证书并可选择将 HTTP 重定向到 HTTPS。证书续期由
 
 [1]: https://developers.cloudflare.com/pages/configuration/build-configuration/ "Cloudflare Pages：构建配置"
 [2]: https://developers.cloudflare.com/pages/framework-guides/deploy-a-vite3-project/ "Cloudflare Pages：Vite 部署"
+[3]: https://developers.cloudflare.com/pages/configuration/preview-deployments/ "Cloudflare Pages：预览部署"
+[4]: https://developers.cloudflare.com/pages/how-to/use-direct-upload-with-continuous-integration/ "Cloudflare Pages：持续集成直传"

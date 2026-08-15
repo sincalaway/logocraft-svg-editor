@@ -99,3 +99,11 @@
 - [x] 在 README 中添加 Cloudflare Pages 部署徽章。
 - [x] 添加变更日志和版本发布规范。
 - [x] 核验工作流语法并提交到独立 GitHub 仓库。
+
+## 自动发布、预览部署与依赖维护
+
+- [x] 核验现有 CI、版本标签与 Cloudflare 部署文档。
+- [x] 添加版本标签触发的 GitHub Release 自动创建工作流。
+- [x] 添加 Cloudflare Pages 预览部署工作流与所需 Secrets 说明。
+- [x] 添加 Dependabot 的 npm 与 GitHub Actions 更新策略。
+- [x] 核验自动化配置并推送独立 GitHub 仓库。
