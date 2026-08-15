@@ -22,7 +22,8 @@ export default function OnboardingGuide() {
   };
 
   useEffect(() => {
-    if (!window.localStorage.getItem(ONBOARDING_KEY) || new URLSearchParams(window.location.search).has("tour")) setOpen(true);
+    const params = new URLSearchParams(window.location.search);
+    if ((!window.localStorage.getItem(ONBOARDING_KEY) && !params.has("embed")) || params.has("tour")) setOpen(true);
     const reopen = () => { setStep(0); setOpen(true); };
     window.addEventListener("logocraft-onboarding-open", reopen);
     return () => window.removeEventListener("logocraft-onboarding-open", reopen);

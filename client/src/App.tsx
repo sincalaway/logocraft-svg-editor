@@ -5,10 +5,12 @@ import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import EditorUtilityDock from "./components/EditorUtilityDock";
 import CanvasReferenceOverlay from "./components/CanvasReferenceOverlay";
+import GlobalCommandPalette from "./components/GlobalCommandPalette";
 import MeasurementUnitController from "./components/MeasurementUnitController";
 import OnboardingGuide from "./components/OnboardingGuide";
 import ProductionToolsDock from "./components/ProductionToolsDock";
 import SidebarShortcutPanel from "./components/SidebarShortcutPanel";
+import VersionHistoryPanel from "./components/VersionHistoryPanel";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import Home from "./pages/Home";
 
@@ -35,6 +37,8 @@ export default function App() {
           <ProductionToolsDock />
           <SidebarShortcutPanel />
           <OnboardingGuide />
+          <GlobalCommandPalette />
+          <VersionHistoryPanel />
         </TooltipProvider>
       </ThemeProvider>
     </ErrorBoundary>
