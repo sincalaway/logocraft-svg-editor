@@ -52,8 +52,10 @@ type LayerGroup = { id: string; name: string; elementIds: string[]; collapsed?: 
 type ReferenceLine = { id: string; axis: "x" | "y"; position: number; color?: string; locked?: boolean };
 type ReferencePreset = { id: string; name: string; lines: ReferenceLine[] };
 type Artboard = { width: number; height: number; bleed: number };
+type Unit = "px" | "mm" | "in";
 type HistoryMeta = Record<number, { name?: string; favorite?: boolean; thumbnail?: string }>;
-type Project = { id: string; name: string; elements: DesignElement[]; groups: LayerGroup[]; referenceLines: ReferenceLine[]; referenceVisible: boolean; referencePresets: ReferencePreset[]; artboard: Artboard; historyMeta: HistoryMeta; modifiedAt: string };
+type Board = { id: string; name: string; elements: DesignElement[]; groups: LayerGroup[]; referenceLines: ReferenceLine[]; referenceVisible: boolean; referencePresets: ReferencePreset[]; artboard: Artboard; historyMeta: HistoryMeta };
+type Project = { id: string; name: string; elements: DesignElement[]; groups: LayerGroup[]; referenceLines: ReferenceLine[]; referenceVisible: boolean; referencePresets: ReferencePreset[]; artboard: Artboard; historyMeta: HistoryMeta; boards?: Board[]; activeBoardId?: string; unit?: Unit; modifiedAt: string };
 type Guide = { axis: "x" | "y"; position: number };
 type Interaction =
   | { kind: "move"; ids: string[]; startX: number; startY: number; bases: Record<string, Pick<DesignElement, "x" | "y">> }
@@ -81,6 +83,7 @@ const presets: Preset[] = [
 
 const uid = (prefix: string) => `${prefix}-${Math.random().toString(36).slice(2, 8)}`;
 const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
+const freshBoard = (name = "画板 1"): Board => ({ id: uid("board"), name, elements: initialElements.map((element) => ({ ...element })), groups: [], referenceLines: [], referenceVisible: true, referencePresets: [], artboard: { ...DEFAULT_ARTBOARD }, historyMeta: {} });
 const freshProject = (name = "Untitled mark", elements = initialElements, groups: LayerGroup[] = [], referenceLines: ReferenceLine[] = []): Project => ({ id: uid("project"), name, elements, groups, referenceLines, referenceVisible: true, referencePresets: [], artboard: DEFAULT_ARTBOARD, historyMeta: {}, modifiedAt: new Date().toISOString() });
 
 function MarkGlyph({ color = "#1C1A18" }: { color?: string }) {
@@ -128,6 +131,9 @@ export default function Home() {
   const [referenceLines, setReferenceLines] = useState<ReferenceLine[]>([]);
   const [referenceVisible, setReferenceVisible] = useState(true);
   const [referencePresets, setReferencePresets] = useState<ReferencePreset[]>([]);
+  const [boards, setBoards] = useState<Board[]>([freshBoard()]);
+  const [activeBoardId, setActiveBoardId] = useState(boards[0].id);
+  const [unit, setUnit] = useState<Unit>("px");
   const [guideDrag, setGuideDrag] = useState<{ id: string; axis: "x" | "y" } | null>(null);
   const [projects, setProjects] = useState<Project[]>([freshProject()]);
   const [activeProjectId, setActiveProjectId] = useState(projects[0].id);
@@ -211,6 +217,25 @@ export default function Home() {
     return () => { window.removeEventListener("logocraft-reference-preset-save", savePreset); window.removeEventListener("logocraft-reference-preset-apply", applyPreset); window.removeEventListener("logocraft-reference-preset-delete", deletePreset); window.removeEventListener("logocraft-reference-presets-request", publishPresets); };
   }, [referenceLines, referencePresets]);
   useEffect(() => {
+    if (!projectReady) return;
+    setBoards((previous) => previous.map((board) => board.id === activeBoardId ? { ...board, elements, artboard, groups, referenceLines, referenceVisible, referencePresets, historyMeta } : board));
+  }, [projectReady, activeBoardId, elements, artboard, groups, referenceLines, referenceVisible, referencePresets, historyMeta]);
+  useEffect(() => {
+    const selectBoard = (event: Event) => { const id = (event as CustomEvent<string>).detail; const next = boards.find((board) => board.id === id); if (!next) return; setActiveBoardId(next.id); setElements(next.elements); setArtboard(next.artboard); setGroups(next.groups); setReferenceLines(next.referenceLines); setReferenceVisible(next.referenceVisible); setReferencePresets(next.referencePresets); setHistoryMeta(next.historyMeta); setHistory([next.elements]); setHistoryIndex(0); setHistoryLabels([`切换至 ${next.name}`]); setSelectedIds([]); toast.message(`已切换至「${next.name}」。`); };
+    const createBoard = () => { const board = freshBoard(`画板 ${boards.length + 1}`); setBoards((previous) => [...previous, board]); setActiveBoardId(board.id); setElements(board.elements); setArtboard(board.artboard); setGroups([]); setReferenceLines([]); setReferenceVisible(true); setReferencePresets([]); setHistoryMeta({}); setHistory([board.elements]); setHistoryIndex(0); setHistoryLabels(["新建画板"]); setSelectedIds([]); toast.success(`已创建「${board.name}」。`); };
+    const renameBoard = (event: Event) => { const detail = (event as CustomEvent<{ id: string; name: string }>).detail; setBoards((previous) => previous.map((board) => board.id === detail.id ? { ...board, name: detail.name } : board)); };
+    const deleteBoard = (event: Event) => { const id = (event as CustomEvent<string>).detail; if (boards.length <= 1) { toast.error("工程至少保留一个画板。"); return; } const remaining = boards.filter((board) => board.id !== id); setBoards(remaining); if (id === activeBoardId) { const next = remaining[0]; selectBoard({ detail: next.id } as CustomEvent<string>); } };
+    const publishBoards = () => window.dispatchEvent(new CustomEvent("logocraft-boards-updated", { detail: { boards, activeBoardId } }));
+    window.addEventListener("logocraft-board-select", selectBoard); window.addEventListener("logocraft-board-create", createBoard); window.addEventListener("logocraft-board-rename", renameBoard); window.addEventListener("logocraft-board-delete", deleteBoard); window.addEventListener("logocraft-boards-request", publishBoards); publishBoards();
+    return () => { window.removeEventListener("logocraft-board-select", selectBoard); window.removeEventListener("logocraft-board-create", createBoard); window.removeEventListener("logocraft-board-rename", renameBoard); window.removeEventListener("logocraft-board-delete", deleteBoard); window.removeEventListener("logocraft-boards-request", publishBoards); };
+  }, [boards, activeBoardId]);
+  useEffect(() => {
+    const updateUnit = (event: Event) => setUnit((event as CustomEvent<Unit>).detail);
+    const publishUnit = () => window.dispatchEvent(new CustomEvent("logocraft-unit-updated", { detail: unit }));
+    window.addEventListener("logocraft-unit-update", updateUnit); window.addEventListener("logocraft-unit-request", publishUnit); publishUnit();
+    return () => { window.removeEventListener("logocraft-unit-update", updateUnit); window.removeEventListener("logocraft-unit-request", publishUnit); };
+  }, [unit]);
+  useEffect(() => {
     try {
       const raw = window.localStorage.getItem(PROJECTS_KEY);
       const legacy = window.localStorage.getItem(LEGACY_DRAFT_KEY);
@@ -218,14 +243,15 @@ export default function Home() {
         const stored = JSON.parse(raw) as { activeProjectId?: string; projects?: Project[] };
         if (Array.isArray(stored.projects) && stored.projects.length) {
           const active = stored.projects.find((project) => project.id === stored.activeProjectId) ?? stored.projects[0];
-          setProjects(stored.projects); setActiveProjectId(active.id); setElements(active.elements); setArtboard(active.artboard ?? DEFAULT_ARTBOARD); setGroups(active.groups ?? []); setReferenceLines(active.referenceLines ?? []); setReferenceVisible(active.referenceVisible ?? true); setReferencePresets(active.referencePresets ?? []); setHistoryMeta(active.historyMeta ?? {}); setDesignName(active.name); setHistory([active.elements]); setHistoryIndex(0); setHistoryLabels(["恢复工程"]); setSelectedIds(active.elements[0] ? [active.elements[0].id] : []);
+          const restoredBoards = active.boards?.length ? active.boards : [{ id: uid("board"), name: "画板 1", elements: active.elements, groups: active.groups ?? [], referenceLines: active.referenceLines ?? [], referenceVisible: active.referenceVisible ?? true, referencePresets: active.referencePresets ?? [], artboard: active.artboard ?? DEFAULT_ARTBOARD, historyMeta: active.historyMeta ?? {} }]; const restoredBoard = restoredBoards.find((board) => board.id === active.activeBoardId) ?? restoredBoards[0];
+          setProjects(stored.projects); setActiveProjectId(active.id); setBoards(restoredBoards); setActiveBoardId(restoredBoard.id); setElements(restoredBoard.elements); setArtboard(restoredBoard.artboard ?? DEFAULT_ARTBOARD); setGroups(restoredBoard.groups ?? []); setReferenceLines(restoredBoard.referenceLines ?? []); setReferenceVisible(restoredBoard.referenceVisible ?? true); setReferencePresets(restoredBoard.referencePresets ?? []); setHistoryMeta(restoredBoard.historyMeta ?? {}); setUnit(active.unit ?? "px"); setDesignName(active.name); setHistory([restoredBoard.elements]); setHistoryIndex(0); setHistoryLabels(["恢复工程"]); setSelectedIds(restoredBoard.elements[0] ? [restoredBoard.elements[0].id] : []);
           toast.message("已恢复本地工程集合。");
         }
       } else if (legacy) {
         const old = JSON.parse(legacy) as { elements?: DesignElement[]; designName?: string };
         if (Array.isArray(old.elements) && old.elements.length) {
           const migrated = freshProject(old.designName || "已迁移草稿", old.elements, []);
-          setProjects([migrated]); setActiveProjectId(migrated.id); setElements(migrated.elements); setArtboard(DEFAULT_ARTBOARD); setGroups([]); setReferenceLines([]); setReferenceVisible(true); setReferencePresets([]); setHistoryMeta({}); setDesignName(migrated.name); setHistory([migrated.elements]); setHistoryIndex(0); setHistoryLabels(["迁移旧草稿"]); setSelectedIds(migrated.elements[0] ? [migrated.elements[0].id] : []);
+          const board = { ...freshBoard("画板 1"), elements: migrated.elements }; setProjects([migrated]); setActiveProjectId(migrated.id); setBoards([board]); setActiveBoardId(board.id); setElements(migrated.elements); setArtboard(DEFAULT_ARTBOARD); setGroups([]); setReferenceLines([]); setReferenceVisible(true); setReferencePresets([]); setHistoryMeta({}); setUnit("px"); setDesignName(migrated.name); setHistory([migrated.elements]); setHistoryIndex(0); setHistoryLabels(["迁移旧草稿"]); setSelectedIds(migrated.elements[0] ? [migrated.elements[0].id] : []);
           toast.message("旧草稿已迁移为独立工程。");
         }
       }
@@ -237,11 +263,11 @@ export default function Home() {
     if (!projectReady) return;
     setProjectStatus("saving");
     const timer = window.setTimeout(() => {
-      setProjects((previous) => previous.map((project) => project.id === activeProjectId ? { ...project, name: designName || "Untitled mark", elements, artboard, groups, referenceLines, referenceVisible, referencePresets, historyMeta, modifiedAt: new Date().toISOString() } : project));
+      setProjects((previous) => previous.map((project) => project.id === activeProjectId ? { ...project, name: designName || "Untitled mark", elements, artboard, groups, referenceLines, referenceVisible, referencePresets, historyMeta, boards, activeBoardId, unit, modifiedAt: new Date().toISOString() } : project));
       setProjectStatus("saved");
     }, 400);
     return () => window.clearTimeout(timer);
-  }, [projectReady, activeProjectId, designName, elements, artboard, groups, referenceLines, referenceVisible, referencePresets, historyMeta]);
+  }, [projectReady, activeProjectId, designName, elements, artboard, groups, referenceLines, referenceVisible, referencePresets, historyMeta, boards, activeBoardId, unit]);
   useEffect(() => {
     if (!projectReady) return;
     const timer = window.setTimeout(() => window.localStorage.setItem(PROJECTS_KEY, JSON.stringify({ version: 3, activeProjectId, projects })), 500);

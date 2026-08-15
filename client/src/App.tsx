@@ -5,6 +5,7 @@ import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import EditorUtilityDock from "./components/EditorUtilityDock";
 import CanvasReferenceOverlay from "./components/CanvasReferenceOverlay";
+import MeasurementUnitController from "./components/MeasurementUnitController";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import Home from "./pages/Home";
 
@@ -26,6 +27,7 @@ export default function App() {
           <Toaster richColors position="top-center" />
           <Router />
           <CanvasReferenceOverlay />
+          <MeasurementUnitController />
           <EditorUtilityDock />
         </TooltipProvider>
       </ThemeProvider>
