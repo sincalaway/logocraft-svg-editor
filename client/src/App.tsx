@@ -6,6 +6,7 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import EditorUtilityDock from "./components/EditorUtilityDock";
 import CanvasReferenceOverlay from "./components/CanvasReferenceOverlay";
 import MeasurementUnitController from "./components/MeasurementUnitController";
+import ProductionToolsDock from "./components/ProductionToolsDock";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import Home from "./pages/Home";
 
@@ -29,6 +30,7 @@ export default function App() {
           <CanvasReferenceOverlay />
           <MeasurementUnitController />
           <EditorUtilityDock />
+          <ProductionToolsDock />
         </TooltipProvider>
       </ThemeProvider>
     </ErrorBoundary>
