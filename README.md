@@ -1,5 +1,9 @@
 # LogoCraft SVG Editor
 
+[![Continuous Integration](https://github.com/sincalaway/logocraft-svg-editor/actions/workflows/ci.yml/badge.svg)](https://github.com/sincalaway/logocraft-svg-editor/actions/workflows/ci.yml)
+[![Cloudflare Pages deployment guide](https://img.shields.io/badge/Cloudflare%20Pages-deploy-F38020?logo=cloudflare&logoColor=white)](./DEPLOYMENT.md#cloudflare-pages推荐)
+[![License: MIT](https://img.shields.io/badge/License-MIT-367D97.svg)](./LICENSE)
+
 LogoCraft 是一个浏览器端 SVG 标志编辑器，围绕**精密工作台**的编辑体验构建。它将多画板、智能参考线、图层与版本控制、可复用模板及专业导出组合在一个本地优先的界面中。
 
 ## 核心能力
@@ -34,6 +38,10 @@ pnpm build
 项目可部署到 Cloudflare Pages、Cloudflare 的直接部署流程，或任意 Nginx 静态服务器。仓库根目录的 [DEPLOYMENT.md](./DEPLOYMENT.md) 提供 Cloudflare Pages、Wrangler、Nginx 和 HTTPS 的完整步骤。
 
 LogoCraft 采用 [MIT License](./LICENSE) 发布。你可以自由使用、修改和分发项目，但应保留许可证与版权声明。
+
+## 版本与发布
+
+每一次可发布变更都会记录在 [CHANGELOG.md](./CHANGELOG.md)。版本号、发布前检查和 GitHub Release 步骤见 [RELEASING.md](./RELEASING.md)。推送到 `main` 或创建拉取请求时，GitHub Actions 会执行 TypeScript 检查和生产构建。
 
 ## 批量导出命名规则
 
