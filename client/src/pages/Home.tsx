@@ -49,9 +49,9 @@ type DesignElement = {
   content?: string; fontSize?: number; fontFamily?: string; shape?: "spark" | "circle" | "square" | "arc"; src?: string; locked?: boolean; hidden?: boolean;
 };
 type LayerGroup = { id: string; name: string; elementIds: string[]; collapsed?: boolean };
-type ReferenceLine = { id: string; axis: "x" | "y"; position: number };
-type HistoryMeta = Record<number, { name?: string; favorite?: boolean }>;
-type Project = { id: string; name: string; elements: DesignElement[]; groups: LayerGroup[]; referenceLines: ReferenceLine[]; historyMeta: HistoryMeta; modifiedAt: string };
+type ReferenceLine = { id: string; axis: "x" | "y"; position: number; color?: string; locked?: boolean };
+type HistoryMeta = Record<number, { name?: string; favorite?: boolean; thumbnail?: string }>;
+type Project = { id: string; name: string; elements: DesignElement[]; groups: LayerGroup[]; referenceLines: ReferenceLine[]; referenceVisible: boolean; historyMeta: HistoryMeta; modifiedAt: string };
 type Guide = { axis: "x" | "y"; position: number };
 type Interaction =
   | { kind: "move"; ids: string[]; startX: number; startY: number; bases: Record<string, Pick<DesignElement, "x" | "y">> }
@@ -69,7 +69,7 @@ const initialElements: DesignElement[] = [
 ];
 const palettes = [{ name: "熔岩琥珀", color: "#FF6B35" }, { name: "墨黑", color: "#1C1A18" }, { name: "纸白", color: "#FBF8F2" }, { name: "苔藓绿", color: "#44624A" }, { name: "深青", color: "#25394A" }, { name: "赭红", color: "#A64131" }];
 const shapeTemplates: Array<Pick<DesignElement, "name" | "shape" | "fill" | "width" | "height">> = [
-  { name: "圆形", shape: "circle", fill: "#FF6B35", width: 74, height: 74 }, { name: "方形", shape: "square", fill: "#1C1A18", width: 72, height: 72 }, { name: "星芒", shape: "spark", fill: "#FF6B35", width: 82, height: 82 }, { name: "弧形", shape: "arc", fill: "#25394A", width: 96, height: 96 },
+  { name: "定位圆", shape: "circle", fill: "#25394A", width: 74, height: 74 }, { name: "负形切片", shape: "square", fill: "#1C1A18", width: 72, height: 72 }, { name: "构造星芒", shape: "spark", fill: "#A64131", width: 82, height: 82 }, { name: "几何弧片", shape: "arc", fill: "#25394A", width: 96, height: 96 },
 ];
 const presets: Preset[] = [
   { id: "arch-studio", name: "拱形工作室", note: "拱形 + 定位点", thumbnail: SPECIMEN_ARC, elements: [{ type: "shape", name: "拱形", x: 230, y: 118, width: 250, height: 250, rotation: 0, fill: "#1C1A18", shape: "arc" }, { type: "shape", name: "琥珀圆", x: 332, y: 248, width: 70, height: 70, rotation: 0, fill: "#FF6B35", shape: "circle" }, { type: "text", name: "工作室名称", x: 176, y: 388, width: 368, height: 56, rotation: 0, fill: "#1C1A18", content: "STUDIO ARC", fontSize: 38, fontFamily: "DM Sans" }] },
@@ -79,7 +79,7 @@ const presets: Preset[] = [
 
 const uid = (prefix: string) => `${prefix}-${Math.random().toString(36).slice(2, 8)}`;
 const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
-const freshProject = (name = "Untitled mark", elements = initialElements, groups: LayerGroup[] = [], referenceLines: ReferenceLine[] = []): Project => ({ id: uid("project"), name, elements, groups, referenceLines, historyMeta: {}, modifiedAt: new Date().toISOString() });
+const freshProject = (name = "Untitled mark", elements = initialElements, groups: LayerGroup[] = [], referenceLines: ReferenceLine[] = []): Project => ({ id: uid("project"), name, elements, groups, referenceLines, referenceVisible: true, historyMeta: {}, modifiedAt: new Date().toISOString() });
 
 function MarkGlyph({ color = "#1C1A18" }: { color?: string }) {
   return <svg viewBox="0 0 240 180" width="100%" height="100%" aria-hidden="true"><path d="M69 46v78c0 10 8 18 18 18h53" fill="none" stroke={color} strokeWidth="20" strokeLinecap="round" strokeLinejoin="round" /><path d="M181 69c-10-15-26-24-45-24-30 0-54 21-54 47s24 47 54 47c19 0 35-10 45-24" fill="none" stroke={color} strokeWidth="20" strokeLinecap="round" /><circle cx="185" cy="136" r="10" fill="#FF6B35" /></svg>;
@@ -123,6 +123,7 @@ export default function Home() {
   const [elements, setElements] = useState<DesignElement[]>(initialElements);
   const [groups, setGroups] = useState<LayerGroup[]>([]);
   const [referenceLines, setReferenceLines] = useState<ReferenceLine[]>([]);
+  const [referenceVisible, setReferenceVisible] = useState(true);
   const [guideDrag, setGuideDrag] = useState<{ id: string; axis: "x" | "y" } | null>(null);
   const [projects, setProjects] = useState<Project[]>([freshProject()]);
   const [activeProjectId, setActiveProjectId] = useState(projects[0].id);
@@ -183,12 +184,14 @@ export default function Home() {
     return () => { window.removeEventListener("logocraft-group-transform", beginTransform); window.removeEventListener("logocraft-reference-begin", beginReference); };
   }, [zoom]);
   useEffect(() => {
-    const createReference = (event: Event) => { const axis = (event as CustomEvent<{ axis: "x" | "y" }>).detail.axis; setReferenceLines((previous) => [...previous, { id: uid("guide"), axis, position: axis === "x" ? CANVAS.width / 2 : CANVAS.height / 2 }]); };
+    const createReference = (event: Event) => { const axis = (event as CustomEvent<{ axis: "x" | "y" }>).detail.axis; setReferenceLines((previous) => [...previous, { id: uid("guide"), axis, position: axis === "x" ? CANVAS.width / 2 : CANVAS.height / 2, color: "#367D97" }]); };
     const deleteReference = (event: Event) => setReferenceLines((previous) => previous.filter((line) => line.id !== (event as CustomEvent<string>).detail));
-    const publishReference = () => window.dispatchEvent(new CustomEvent("logocraft-reference-updated", { detail: referenceLines }));
-    window.addEventListener("logocraft-reference-create", createReference); window.addEventListener("logocraft-reference-delete", deleteReference); window.addEventListener("logocraft-reference-request", publishReference); publishReference();
-    return () => { window.removeEventListener("logocraft-reference-create", createReference); window.removeEventListener("logocraft-reference-delete", deleteReference); window.removeEventListener("logocraft-reference-request", publishReference); };
-  }, [referenceLines]);
+    const updateReference = (event: Event) => { const detail = (event as CustomEvent<{ id: string; updates: Partial<ReferenceLine> }>).detail; setReferenceLines((previous) => previous.map((line) => line.id === detail.id ? { ...line, ...detail.updates } : line)); };
+    const changeVisibility = (event: Event) => setReferenceVisible((event as CustomEvent<boolean>).detail);
+    const publishReference = () => window.dispatchEvent(new CustomEvent("logocraft-reference-updated", { detail: { lines: referenceLines, visible: referenceVisible } }));
+    window.addEventListener("logocraft-reference-create", createReference); window.addEventListener("logocraft-reference-delete", deleteReference); window.addEventListener("logocraft-reference-update", updateReference); window.addEventListener("logocraft-reference-visible", changeVisibility); window.addEventListener("logocraft-reference-request", publishReference); publishReference();
+    return () => { window.removeEventListener("logocraft-reference-create", createReference); window.removeEventListener("logocraft-reference-delete", deleteReference); window.removeEventListener("logocraft-reference-update", updateReference); window.removeEventListener("logocraft-reference-visible", changeVisibility); window.removeEventListener("logocraft-reference-request", publishReference); };
+  }, [referenceLines, referenceVisible]);
   useEffect(() => {
     try {
       const raw = window.localStorage.getItem(PROJECTS_KEY);
@@ -197,14 +200,14 @@ export default function Home() {
         const stored = JSON.parse(raw) as { activeProjectId?: string; projects?: Project[] };
         if (Array.isArray(stored.projects) && stored.projects.length) {
           const active = stored.projects.find((project) => project.id === stored.activeProjectId) ?? stored.projects[0];
-          setProjects(stored.projects); setActiveProjectId(active.id); setElements(active.elements); setGroups(active.groups ?? []); setReferenceLines(active.referenceLines ?? []); setHistoryMeta(active.historyMeta ?? {}); setDesignName(active.name); setHistory([active.elements]); setHistoryIndex(0); setHistoryLabels(["恢复工程"]); setSelectedIds(active.elements[0] ? [active.elements[0].id] : []);
+          setProjects(stored.projects); setActiveProjectId(active.id); setElements(active.elements); setGroups(active.groups ?? []); setReferenceLines(active.referenceLines ?? []); setReferenceVisible(active.referenceVisible ?? true); setHistoryMeta(active.historyMeta ?? {}); setDesignName(active.name); setHistory([active.elements]); setHistoryIndex(0); setHistoryLabels(["恢复工程"]); setSelectedIds(active.elements[0] ? [active.elements[0].id] : []);
           toast.message("已恢复本地工程集合。");
         }
       } else if (legacy) {
         const old = JSON.parse(legacy) as { elements?: DesignElement[]; designName?: string };
         if (Array.isArray(old.elements) && old.elements.length) {
           const migrated = freshProject(old.designName || "已迁移草稿", old.elements, []);
-          setProjects([migrated]); setActiveProjectId(migrated.id); setElements(migrated.elements); setGroups([]); setReferenceLines([]); setHistoryMeta({}); setDesignName(migrated.name); setHistory([migrated.elements]); setHistoryIndex(0); setHistoryLabels(["迁移旧草稿"]); setSelectedIds(migrated.elements[0] ? [migrated.elements[0].id] : []);
+          setProjects([migrated]); setActiveProjectId(migrated.id); setElements(migrated.elements); setGroups([]); setReferenceLines([]); setReferenceVisible(true); setHistoryMeta({}); setDesignName(migrated.name); setHistory([migrated.elements]); setHistoryIndex(0); setHistoryLabels(["迁移旧草稿"]); setSelectedIds(migrated.elements[0] ? [migrated.elements[0].id] : []);
           toast.message("旧草稿已迁移为独立工程。");
         }
       }
@@ -216,11 +219,11 @@ export default function Home() {
     if (!projectReady) return;
     setProjectStatus("saving");
     const timer = window.setTimeout(() => {
-      setProjects((previous) => previous.map((project) => project.id === activeProjectId ? { ...project, name: designName || "Untitled mark", elements, groups, referenceLines, historyMeta, modifiedAt: new Date().toISOString() } : project));
+      setProjects((previous) => previous.map((project) => project.id === activeProjectId ? { ...project, name: designName || "Untitled mark", elements, groups, referenceLines, referenceVisible, historyMeta, modifiedAt: new Date().toISOString() } : project));
       setProjectStatus("saved");
     }, 400);
     return () => window.clearTimeout(timer);
-  }, [projectReady, activeProjectId, designName, elements, groups, referenceLines, historyMeta]);
+  }, [projectReady, activeProjectId, designName, elements, groups, referenceLines, referenceVisible, historyMeta]);
   useEffect(() => {
     if (!projectReady) return;
     const timer = window.setTimeout(() => window.localStorage.setItem(PROJECTS_KEY, JSON.stringify({ version: 3, activeProjectId, projects })), 500);
@@ -318,6 +321,14 @@ export default function Home() {
     });
     commit(next); toast.success(mode.startsWith("distribute") ? "已等距分布所选图层。" : "已对齐所选图层。");
   };
+  const alignToReference = (axis: "x" | "y", mode: "start" | "center" | "end" = "center") => {
+    if (selectedElements.length < 2) { toast.message("请选择多个图层后对齐至参考线。"); return; }
+    const candidates = referenceLines.filter((line) => line.axis === axis); if (!candidates.length) { toast.message(`请先创建${axis === "x" ? "垂直" : "水平"}参考线。`); return; }
+    const left = Math.min(...selectedElements.map((element) => element.x)); const right = Math.max(...selectedElements.map((element) => element.x + element.width)); const top = Math.min(...selectedElements.map((element) => element.y)); const bottom = Math.max(...selectedElements.map((element) => element.y + element.height));
+    const source = axis === "x" ? (mode === "start" ? left : mode === "end" ? right : (left + right) / 2) : (mode === "start" ? top : mode === "end" ? bottom : (top + bottom) / 2);
+    const reference = candidates.reduce((nearest, line) => Math.abs(line.position - source) < Math.abs(nearest.position - source) ? line : nearest);
+    const delta = reference.position - source; commit(elements.map((element) => selectedIds.includes(element.id) ? (axis === "x" ? { ...element, x: element.x + delta } : { ...element, y: element.y + delta }) : element), `对齐至${axis === "x" ? "垂直" : "水平"}参考线`); toast.success("已将所选图层对齐到最近参考线。");
+  };
   const copyStyle = () => { if (!selected) { toast.message("请选择一个图层后复制样式。"); return; } setStyleClipboard({ fill: selected.fill, fontSize: selected.fontSize, fontFamily: selected.fontFamily, rotation: selected.rotation }); toast.success("图层样式已复制。"); };
   const pasteStyle = () => { if (!selected || !styleClipboard) { toast.message("请先复制样式，再选择目标图层粘贴。"); return; } commit(elements.map((element) => element.id === selected.id ? { ...element, fill: styleClipboard.fill, fontSize: styleClipboard.fontSize, fontFamily: styleClipboard.fontFamily } : element), "粘贴图层样式"); toast.success("图层样式已粘贴。"); };
   const restoreHistory = (index: number) => { if (!history[index]) return; setElements(history[index]); setHistoryIndex(index); setSelectedIds([]); setHistoryOpen(false); toast.message(`已回退到：${historyLabels[index] ?? "历史版本"}`); };
@@ -337,8 +348,8 @@ export default function Home() {
   const exportSvg = () => { const blob = new Blob([makeSvg(elements)], { type: "image/svg+xml;charset=utf-8" }); const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = `${designName.trim().replace(/\s+/g, "-").toLowerCase() || "logocraft-design"}.svg`; link.click(); URL.revokeObjectURL(link.href); toast.success("SVG 已导出，保留无限缩放能力。"); };
   const exportPng = () => { const svg = makeSvg(elements); const image = new Image(); image.onload = () => { const canvas = document.createElement("canvas"); canvas.width = CANVAS.width * 2; canvas.height = CANVAS.height * 2; const context = canvas.getContext("2d"); if (!context) return; context.drawImage(image, 0, 0, canvas.width, canvas.height); const link = document.createElement("a"); link.href = canvas.toDataURL("image/png"); link.download = `${designName.trim().replace(/\s+/g, "-").toLowerCase() || "logocraft-design"}.png`; link.click(); toast.success("PNG 已导出。"); }; image.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`; };
   useEffect(() => { const publishHistory = () => window.dispatchEvent(new CustomEvent("logocraft-history-updated", { detail: { labels: historyLabels, activeIndex: historyIndex, meta: historyMeta } })); publishHistory(); window.addEventListener("logocraft-history-request", publishHistory); return () => window.removeEventListener("logocraft-history-request", publishHistory); }, [historyLabels, historyIndex, historyMeta]);
-  useEffect(() => { const rename = (event: Event) => { const detail = (event as CustomEvent<{ index: number; name: string }>).detail; setHistoryMeta((previous) => ({ ...previous, [detail.index]: { ...previous[detail.index], name: detail.name } })); }; const favorite = (event: Event) => { const index = (event as CustomEvent<number>).detail; setHistoryMeta((previous) => ({ ...previous, [index]: { ...previous[index], favorite: !previous[index]?.favorite } })); }; window.addEventListener("logocraft-history-rename", rename); window.addEventListener("logocraft-history-favorite", favorite); return () => { window.removeEventListener("logocraft-history-rename", rename); window.removeEventListener("logocraft-history-favorite", favorite); }; }, []);
-  useEffect(() => { const onCopy = () => copyStyle(); const onPaste = () => pasteStyle(); const onRestore = (event: Event) => restoreHistory((event as CustomEvent<number>).detail); window.addEventListener("logocraft-copy-style", onCopy); window.addEventListener("logocraft-paste-style", onPaste); window.addEventListener("logocraft-history-restore", onRestore); return () => { window.removeEventListener("logocraft-copy-style", onCopy); window.removeEventListener("logocraft-paste-style", onPaste); window.removeEventListener("logocraft-history-restore", onRestore); }; });
+  useEffect(() => { const rename = (event: Event) => { const detail = (event as CustomEvent<{ index: number; name: string }>).detail; setHistoryMeta((previous) => ({ ...previous, [detail.index]: { ...previous[detail.index], name: detail.name } })); }; const favorite = (event: Event) => { const index = (event as CustomEvent<number>).detail; const snapshot = history[index]; if (!snapshot) return; const thumbnail = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(makeSvg(snapshot))}`; setHistoryMeta((previous) => ({ ...previous, [index]: { ...previous[index], favorite: !previous[index]?.favorite, thumbnail } })); }; const exportSnapshot = (event: Event) => { const index = (event as CustomEvent<number>).detail; const snapshot = history[index]; if (!snapshot) return; const blob = new Blob([makeSvg(snapshot)], { type: "image/svg+xml;charset=utf-8" }); const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = `${designName.replace(/\s+/g, "-").toLowerCase() || "logocraft"}-snapshot-${index + 1}.svg`; link.click(); URL.revokeObjectURL(link.href); toast.success("收藏快照已导出为 SVG。"); }; window.addEventListener("logocraft-history-rename", rename); window.addEventListener("logocraft-history-favorite", favorite); window.addEventListener("logocraft-history-export", exportSnapshot); return () => { window.removeEventListener("logocraft-history-rename", rename); window.removeEventListener("logocraft-history-favorite", favorite); window.removeEventListener("logocraft-history-export", exportSnapshot); }; }, [history, designName]);
+  useEffect(() => { const onCopy = () => copyStyle(); const onPaste = () => pasteStyle(); const onRestore = (event: Event) => restoreHistory((event as CustomEvent<number>).detail); const onReferenceAlign = (event: Event) => { const detail = (event as CustomEvent<{ axis: "x" | "y"; mode: "start" | "center" | "end" }>).detail; alignToReference(detail.axis, detail.mode); }; window.addEventListener("logocraft-copy-style", onCopy); window.addEventListener("logocraft-paste-style", onPaste); window.addEventListener("logocraft-history-restore", onRestore); window.addEventListener("logocraft-reference-align", onReferenceAlign); return () => { window.removeEventListener("logocraft-copy-style", onCopy); window.removeEventListener("logocraft-paste-style", onPaste); window.removeEventListener("logocraft-history-restore", onRestore); window.removeEventListener("logocraft-reference-align", onReferenceAlign); }; });
   useEffect(() => { const keyHandler = (event: KeyboardEvent) => { const target = event.target as HTMLElement; if (target.tagName === "INPUT" || target.tagName === "SELECT") return; const meta = event.metaKey || event.ctrlKey; if (meta && event.key.toLowerCase() === "z") { event.preventDefault(); event.shiftKey ? redo() : undo(); } if (meta && event.key.toLowerCase() === "c" && selected) { event.preventDefault(); copyStyle(); } if (meta && event.key.toLowerCase() === "v" && selected) { event.preventDefault(); pasteStyle(); } if (event.key === "?") { event.preventDefault(); window.dispatchEvent(new Event("logocraft-shortcuts")); } if (event.key.toLowerCase() === "h") { event.preventDefault(); window.dispatchEvent(new Event("logocraft-history")); } if ((event.key === "Backspace" || event.key === "Delete") && selectedIds.length) { event.preventDefault(); removeSelected(); } if (event.key === "Escape") { setSelectedIds([]); setPreviewOpen(false); setShortcutsOpen(false); setHistoryOpen(false); setInteraction(null); setGuides([]); } }; window.addEventListener("keydown", keyHandler); return () => window.removeEventListener("keydown", keyHandler); });
   const numeric = (key: "x" | "y" | "width" | "height" | "rotation" | "fontSize", value: string) => updateSelected({ [key]: Number(value) } as Partial<DesignElement>);
   const marqueeStyle = interaction?.kind === "marquee" ? { left: Math.min(interaction.startX, interaction.currentX), top: Math.min(interaction.startY, interaction.currentY), width: Math.abs(interaction.currentX - interaction.startX), height: Math.abs(interaction.currentY - interaction.startY) } : null;
