@@ -3,6 +3,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/NotFound";
 import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
+import EditorUtilityDock from "./components/EditorUtilityDock";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import Home from "./pages/Home";
 
@@ -23,6 +24,7 @@ export default function App() {
         <TooltipProvider>
           <Toaster richColors position="top-center" />
           <Router />
+          <EditorUtilityDock />
         </TooltipProvider>
       </ThemeProvider>
     </ErrorBoundary>

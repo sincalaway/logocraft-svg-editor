@@ -54,6 +54,7 @@ type Guide = { axis: "x" | "y"; position: number };
 type Interaction =
   | { kind: "move"; ids: string[]; startX: number; startY: number; bases: Record<string, Pick<DesignElement, "x" | "y">> }
   | { kind: "resize"; id: string; handle: ResizeHandle; startX: number; startY: number; base: DesignElement }
+  | { kind: "rotate"; id: string; startAngle: number; base: DesignElement }
   | { kind: "marquee"; startX: number; startY: number; currentX: number; currentY: number; additive: boolean };
 type Preset = { id: string; name: string; note: string; thumbnail: string; elements: Omit<DesignElement, "id">[] };
 
@@ -94,7 +95,7 @@ function ResizeHandles({ onPointerDown }: { onPointerDown: (event: ReactPointerE
 function DesignObject({ element, selected, allowResize, onPointerDown, onResizePointerDown }: { element: DesignElement; selected: boolean; allowResize: boolean; onPointerDown: (event: ReactPointerEvent<HTMLDivElement>) => void; onResizePointerDown: (event: ReactPointerEvent<HTMLButtonElement>, handle: ResizeHandle) => void }) {
   if (element.hidden) return null;
   const content = element.type === "mark" ? <MarkGlyph color={element.fill} /> : element.type === "shape" ? <ShapeGlyph shape={element.shape} fill={element.fill} /> : element.type === "image" ? <img src={element.src} className="h-full w-full object-contain" draggable={false} alt="已上传的图形" /> : <div className="flex h-full w-full items-center justify-center whitespace-nowrap text-center font-bold leading-none" style={{ color: element.fill, fontSize: element.fontSize, fontFamily: element.fontFamily }}>{element.content}</div>;
-  return <div className={`absolute touch-none select-none ${selected ? "selection-outline" : ""} ${element.locked ? "cursor-not-allowed" : ""}`} style={{ left: element.x, top: element.y, width: element.width, height: element.height, transform: `rotate(${element.rotation}deg)`, cursor: element.locked ? "not-allowed" : "grab" }} onPointerDown={onPointerDown} role="button" aria-label={`选择 ${element.name}`}>{content}{selected && !element.locked && allowResize && <ResizeHandles onPointerDown={onResizePointerDown} />}{selected && element.locked && <span className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full border border-white/70 bg-[#1e1e21] text-[#ff6b35]"><Lock size={10} /></span>}</div>;
+  return <div className={`absolute touch-none select-none ${selected ? "selection-outline" : ""} ${element.locked ? "cursor-not-allowed" : ""}`} style={{ left: element.x, top: element.y, width: element.width, height: element.height, transform: `rotate(${element.rotation}deg)`, cursor: element.locked ? "not-allowed" : "grab" }} onPointerDown={onPointerDown} role="button" aria-label={`选择 ${element.name}`}>{content}{selected && !element.locked && allowResize && <><ResizeHandles onPointerDown={onResizePointerDown} /><span className="rotate-stem" /><button aria-label="旋转对象" className="rotate-handle" onPointerDown={(event) => { event.preventDefault(); event.stopPropagation(); window.dispatchEvent(new CustomEvent("logocraft-rotate", { detail: { id: element.id, clientX: event.clientX, clientY: event.clientY } })); }}>↻</button></>}{selected && element.locked && <span className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full border border-white/70 bg-[#1e1e21] text-[#ff6b35]"><Lock size={10} /></span>}</div>;
 }
 function makeSvg(elements: DesignElement[]) {
   const body = elements.filter((element) => !element.hidden).map((el) => {
@@ -119,6 +120,11 @@ export default function Home() {
   const [selectedIds, setSelectedIds] = useState<string[]>(["craft-mark"]);
   const [history, setHistory] = useState<DesignElement[][]>([initialElements]);
   const [historyIndex, setHistoryIndex] = useState(0);
+  const [historyLabels, setHistoryLabels] = useState<string[]>(["初始构图"]);
+  const [styleClipboard, setStyleClipboard] = useState<Pick<DesignElement, "fill" | "fontSize" | "fontFamily" | "rotation"> | null>(null);
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [rotationTip, setRotationTip] = useState<number | null>(null);
   const [activeTool, setActiveTool] = useState<AssetKind>("pointer");
   const [libraryTab, setLibraryTab] = useState<LibraryTab>("shapes");
   const [previewOpen, setPreviewOpen] = useState(false);
@@ -135,6 +141,19 @@ export default function Home() {
 
   useEffect(() => { elementsRef.current = elements; }, [elements]);
   useEffect(() => {
+    const beginRotation = (event: Event) => {
+      const detail = (event as CustomEvent<{ id: string; clientX: number; clientY: number }>).detail;
+      const element = elementsRef.current.find((item) => item.id === detail.id);
+      const rect = stageRef.current?.getBoundingClientRect();
+      if (!element || element.locked || !rect) return;
+      const x = (detail.clientX - rect.left) / zoom; const y = (detail.clientY - rect.top) / zoom;
+      const centerX = element.x + element.width / 2; const centerY = element.y + element.height / 2;
+      setInteraction({ kind: "rotate", id: element.id, startAngle: Math.atan2(y - centerY, x - centerX) * 180 / Math.PI, base: element });
+    };
+    window.addEventListener("logocraft-rotate", beginRotation);
+    return () => window.removeEventListener("logocraft-rotate", beginRotation);
+  }, [zoom]);
+  useEffect(() => {
     try {
       const raw = window.localStorage.getItem(PROJECTS_KEY);
       const legacy = window.localStorage.getItem(LEGACY_DRAFT_KEY);
@@ -142,14 +161,14 @@ export default function Home() {
         const stored = JSON.parse(raw) as { activeProjectId?: string; projects?: Project[] };
         if (Array.isArray(stored.projects) && stored.projects.length) {
           const active = stored.projects.find((project) => project.id === stored.activeProjectId) ?? stored.projects[0];
-          setProjects(stored.projects); setActiveProjectId(active.id); setElements(active.elements); setGroups(active.groups ?? []); setDesignName(active.name); setHistory([active.elements]); setHistoryIndex(0); setSelectedIds([]);
+          setProjects(stored.projects); setActiveProjectId(active.id); setElements(active.elements); setGroups(active.groups ?? []); setDesignName(active.name); setHistory([active.elements]); setHistoryIndex(0); setHistoryLabels(["恢复工程"]); setSelectedIds(active.elements[0] ? [active.elements[0].id] : []);
           toast.message("已恢复本地工程集合。");
         }
       } else if (legacy) {
         const old = JSON.parse(legacy) as { elements?: DesignElement[]; designName?: string };
         if (Array.isArray(old.elements) && old.elements.length) {
           const migrated = freshProject(old.designName || "已迁移草稿", old.elements, []);
-          setProjects([migrated]); setActiveProjectId(migrated.id); setElements(migrated.elements); setGroups([]); setDesignName(migrated.name); setHistory([migrated.elements]); setHistoryIndex(0); setSelectedIds([]);
+          setProjects([migrated]); setActiveProjectId(migrated.id); setElements(migrated.elements); setGroups([]); setDesignName(migrated.name); setHistory([migrated.elements]); setHistoryIndex(0); setHistoryLabels(["迁移旧草稿"]); setSelectedIds(migrated.elements[0] ? [migrated.elements[0].id] : []);
           toast.message("旧草稿已迁移为独立工程。");
         }
       }
@@ -178,9 +197,10 @@ export default function Home() {
   const scaledWidth = CANVAS.width * zoom; const scaledHeight = CANVAS.height * zoom;
   const groupedIds = useMemo(() => new Set(groups.flatMap((group) => group.elementIds)), [groups]);
 
-  const commit = useCallback((next: DesignElement[]) => {
+  const commit = useCallback((next: DesignElement[], label = "编辑图层") => {
     setElements(next);
     setHistory((previous) => { const revised = [...previous.slice(0, historyIndex + 1), next]; setHistoryIndex(revised.length - 1); return revised; });
+    setHistoryLabels((previous) => [...previous.slice(0, historyIndex + 1), label]);
   }, [historyIndex]);
   const pointOnCanvas = (clientX: number, clientY: number) => { const rect = stageRef.current?.getBoundingClientRect(); if (!rect) return { x: 0, y: 0 }; return { x: clamp((clientX - rect.left) / zoom, 0, CANVAS.width), y: clamp((clientY - rect.top) / zoom, 0, CANVAS.height) }; };
   const updateSelected = (updates: Partial<DesignElement>) => { if (!selected) return; commit(elements.map((element) => element.id === selected.id ? { ...element, ...updates } : element)); };
@@ -217,19 +237,21 @@ export default function Home() {
     const bases = Object.fromEntries(moveIds.map((id) => { const candidate = elements.find((item) => item.id === id)!; return [id, { x: candidate.x, y: candidate.y }]; })); stageRef.current?.setPointerCapture(event.pointerId); setInteraction({ kind: "move", ids: moveIds, startX: point.x, startY: point.y, bases });
   };
   const onResizePointerDown = (event: ReactPointerEvent<HTMLButtonElement>, handle: ResizeHandle) => { event.preventDefault(); event.stopPropagation(); if (!selected || selected.locked) return; const point = pointOnCanvas(event.clientX, event.clientY); stageRef.current?.setPointerCapture(event.pointerId); setInteraction({ kind: "resize", id: selected.id, handle, startX: point.x, startY: point.y, base: selected }); };
+  const onRotatePointerDown = (event: ReactPointerEvent<HTMLButtonElement>) => { event.preventDefault(); event.stopPropagation(); if (!selected || selected.locked) return; const point = pointOnCanvas(event.clientX, event.clientY); const centerX = selected.x + selected.width / 2; const centerY = selected.y + selected.height / 2; const startAngle = Math.atan2(point.y - centerY, point.x - centerX) * 180 / Math.PI; stageRef.current?.setPointerCapture(event.pointerId); setInteraction({ kind: "rotate", id: selected.id, startAngle, base: selected }); };
   const onStagePointerDown = (event: ReactPointerEvent<HTMLDivElement>) => { if (event.target !== event.currentTarget || activeTool !== "pointer") return; const point = pointOnCanvas(event.clientX, event.clientY); stageRef.current?.setPointerCapture(event.pointerId); if (!event.shiftKey) setSelectedIds([]); setInteraction({ kind: "marquee", startX: point.x, startY: point.y, currentX: point.x, currentY: point.y, additive: event.shiftKey }); };
   const onStagePointerMove = (event: ReactPointerEvent<HTMLDivElement>) => {
     if (!interaction) return; const point = pointOnCanvas(event.clientX, event.clientY);
     if (interaction.kind === "marquee") { setInteraction({ ...interaction, currentX: point.x, currentY: point.y }); return; }
     if (interaction.kind === "move") { const snapped = resolveSnap(interaction.ids, interaction.bases, point.x - interaction.startX, point.y - interaction.startY); setGuides(snapped.guides); setElements((previous) => previous.map((element) => { const base = interaction.bases[element.id]; return base ? { ...element, x: clamp(base.x + snapped.dx, -element.width + MIN_SIZE, CANVAS.width - MIN_SIZE), y: clamp(base.y + snapped.dy, -element.height + MIN_SIZE, CANVAS.height - MIN_SIZE) } : element; })); return; }
+    if (interaction.kind === "rotate") { const centerX = interaction.base.x + interaction.base.width / 2; const centerY = interaction.base.y + interaction.base.height / 2; const currentAngle = Math.atan2(point.y - centerY, point.x - centerX) * 180 / Math.PI; const raw = interaction.base.rotation + currentAngle - interaction.startAngle; const snap15 = Math.round(raw / 15) * 15; const snap45 = Math.round(raw / 45) * 45; const rotation = Math.abs(raw - snap45) <= 5 ? snap45 : snap15; setRotationTip(((rotation % 360) + 360) % 360); setElements((previous) => previous.map((element) => element.id === interaction.id ? { ...element, rotation } : element)); return; }
     const dx = point.x - interaction.startX; const dy = point.y - interaction.startY; const { base, handle } = interaction; let x = base.x; let y = base.y; let width = base.width; let height = base.height;
     if (handle.includes("e")) width = clamp(base.width + dx, MIN_SIZE, CANVAS.width - base.x); if (handle.includes("s")) height = clamp(base.height + dy, MIN_SIZE, CANVAS.height - base.y); if (handle.includes("w")) { x = clamp(base.x + dx, 0, base.x + base.width - MIN_SIZE); width = base.x + base.width - x; } if (handle.includes("n")) { y = clamp(base.y + dy, 0, base.y + base.height - MIN_SIZE); height = base.y + base.height - y; }
     setElements((previous) => previous.map((element) => element.id === interaction.id ? { ...element, x, y, width, height } : element));
   };
   const onStagePointerUp = () => {
     if (!interaction) return;
-    if (interaction.kind === "marquee") { const left = Math.min(interaction.startX, interaction.currentX); const top = Math.min(interaction.startY, interaction.currentY); const right = Math.max(interaction.startX, interaction.currentX); const bottom = Math.max(interaction.startY, interaction.currentY); const matched = elements.filter((element) => !element.hidden && element.x + element.width >= left && element.x <= right && element.y + element.height >= top && element.y <= bottom).map((element) => element.id); setSelectedIds((previous) => interaction.additive ? Array.from(new Set([...previous, ...matched])) : matched); } else { const current = elementsRef.current; setHistory((previous) => { const revised = [...previous.slice(0, historyIndex + 1), current]; setHistoryIndex(revised.length - 1); return revised; }); }
-    setGuides([]); setInteraction(null);
+    if (interaction.kind === "marquee") { const left = Math.min(interaction.startX, interaction.currentX); const top = Math.min(interaction.startY, interaction.currentY); const right = Math.max(interaction.startX, interaction.currentX); const bottom = Math.max(interaction.startY, interaction.currentY); const matched = elements.filter((element) => !element.hidden && element.x + element.width >= left && element.x <= right && element.y + element.height >= top && element.y <= bottom).map((element) => element.id); setSelectedIds((previous) => interaction.additive ? Array.from(new Set([...previous, ...matched])) : matched); } else { const current = elementsRef.current; const label = interaction.kind === "rotate" ? "旋转图层" : interaction.kind === "resize" ? "调整图层尺寸" : "移动图层"; setHistory((previous) => { const revised = [...previous.slice(0, historyIndex + 1), current]; setHistoryIndex(revised.length - 1); return revised; }); setHistoryLabels((previous) => [...previous.slice(0, historyIndex + 1), label]); }
+    setGuides([]); setRotationTip(null); setInteraction(null);
   };
   const onCanvasWheel = (event: ReactWheelEvent<HTMLDivElement>) => { event.preventDefault(); setZoom((current) => clamp(Number((current + (event.deltaY < 0 ? 0.1 : -0.1)).toFixed(2)), 0.4, 2.4)); };
 
@@ -249,6 +271,9 @@ export default function Home() {
     });
     commit(next); toast.success(mode.startsWith("distribute") ? "已等距分布所选图层。" : "已对齐所选图层。");
   };
+  const copyStyle = () => { if (!selected) { toast.message("请选择一个图层后复制样式。"); return; } setStyleClipboard({ fill: selected.fill, fontSize: selected.fontSize, fontFamily: selected.fontFamily, rotation: selected.rotation }); toast.success("图层样式已复制。"); };
+  const pasteStyle = () => { if (!selected || !styleClipboard) { toast.message("请先复制样式，再选择目标图层粘贴。"); return; } commit(elements.map((element) => element.id === selected.id ? { ...element, fill: styleClipboard.fill, fontSize: styleClipboard.fontSize, fontFamily: styleClipboard.fontFamily } : element), "粘贴图层样式"); toast.success("图层样式已粘贴。"); };
+  const restoreHistory = (index: number) => { if (!history[index]) return; setElements(history[index]); setHistoryIndex(index); setSelectedIds([]); setHistoryOpen(false); toast.message(`已回退到：${historyLabels[index] ?? "历史版本"}`); };
   const undo = () => { if (historyIndex <= 0) return; const nextIndex = historyIndex - 1; setHistoryIndex(nextIndex); setElements(history[nextIndex]); setSelectedIds([]); };
   const redo = () => { if (historyIndex >= history.length - 1) return; const nextIndex = historyIndex + 1; setHistoryIndex(nextIndex); setElements(history[nextIndex]); setSelectedIds([]); };
   const removeSelected = () => { if (!selectedIds.length) return; const next = elements.filter((element) => !selectedIds.includes(element.id)); commit(next); setGroups((previous) => previous.map((group) => ({ ...group, elementIds: group.elementIds.filter((id) => !selectedIds.includes(id)) })).filter((group) => group.elementIds.length)); setSelectedIds([]); toast.message("已移除所选图层"); };
@@ -264,7 +289,9 @@ export default function Home() {
   const importJson = (event: ChangeEvent<HTMLInputElement>) => { const file = event.target.files?.[0]; if (!file) return; const reader = new FileReader(); reader.onload = () => { try { const payload = JSON.parse(String(reader.result)) as Partial<Project>; if (!Array.isArray(payload.elements)) throw new Error("invalid"); const imported = freshProject(payload.name || file.name.replace(/\.json$/i, "导入工程"), payload.elements as DesignElement[], Array.isArray(payload.groups) ? payload.groups as LayerGroup[] : []); setProjects((previous) => [...previous, imported]); activateProject(imported); toast.success("JSON 工程已导入为新的草稿。"); } catch { toast.error("无法识别该 JSON 工程文件。"); } }; reader.readAsText(file); event.target.value = ""; };
   const exportSvg = () => { const blob = new Blob([makeSvg(elements)], { type: "image/svg+xml;charset=utf-8" }); const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = `${designName.trim().replace(/\s+/g, "-").toLowerCase() || "logocraft-design"}.svg`; link.click(); URL.revokeObjectURL(link.href); toast.success("SVG 已导出，保留无限缩放能力。"); };
   const exportPng = () => { const svg = makeSvg(elements); const image = new Image(); image.onload = () => { const canvas = document.createElement("canvas"); canvas.width = CANVAS.width * 2; canvas.height = CANVAS.height * 2; const context = canvas.getContext("2d"); if (!context) return; context.drawImage(image, 0, 0, canvas.width, canvas.height); const link = document.createElement("a"); link.href = canvas.toDataURL("image/png"); link.download = `${designName.trim().replace(/\s+/g, "-").toLowerCase() || "logocraft-design"}.png`; link.click(); toast.success("PNG 已导出。"); }; image.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`; };
-  useEffect(() => { const keyHandler = (event: KeyboardEvent) => { const target = event.target as HTMLElement; if (target.tagName === "INPUT" || target.tagName === "SELECT") return; if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "z") { event.preventDefault(); event.shiftKey ? redo() : undo(); } if ((event.key === "Backspace" || event.key === "Delete") && selectedIds.length) { event.preventDefault(); removeSelected(); } if (event.key === "Escape") { setSelectedIds([]); setPreviewOpen(false); setInteraction(null); setGuides([]); } }; window.addEventListener("keydown", keyHandler); return () => window.removeEventListener("keydown", keyHandler); });
+  useEffect(() => { const publishHistory = () => window.dispatchEvent(new CustomEvent("logocraft-history-updated", { detail: { labels: historyLabels, activeIndex: historyIndex } })); publishHistory(); window.addEventListener("logocraft-history-request", publishHistory); return () => window.removeEventListener("logocraft-history-request", publishHistory); }, [historyLabels, historyIndex]);
+  useEffect(() => { const onCopy = () => copyStyle(); const onPaste = () => pasteStyle(); const onRestore = (event: Event) => restoreHistory((event as CustomEvent<number>).detail); window.addEventListener("logocraft-copy-style", onCopy); window.addEventListener("logocraft-paste-style", onPaste); window.addEventListener("logocraft-history-restore", onRestore); return () => { window.removeEventListener("logocraft-copy-style", onCopy); window.removeEventListener("logocraft-paste-style", onPaste); window.removeEventListener("logocraft-history-restore", onRestore); }; });
+  useEffect(() => { const keyHandler = (event: KeyboardEvent) => { const target = event.target as HTMLElement; if (target.tagName === "INPUT" || target.tagName === "SELECT") return; const meta = event.metaKey || event.ctrlKey; if (meta && event.key.toLowerCase() === "z") { event.preventDefault(); event.shiftKey ? redo() : undo(); } if (meta && event.key.toLowerCase() === "c" && selected) { event.preventDefault(); copyStyle(); } if (meta && event.key.toLowerCase() === "v" && selected) { event.preventDefault(); pasteStyle(); } if (event.key === "?") { event.preventDefault(); window.dispatchEvent(new Event("logocraft-shortcuts")); } if (event.key.toLowerCase() === "h") { event.preventDefault(); window.dispatchEvent(new Event("logocraft-history")); } if ((event.key === "Backspace" || event.key === "Delete") && selectedIds.length) { event.preventDefault(); removeSelected(); } if (event.key === "Escape") { setSelectedIds([]); setPreviewOpen(false); setShortcutsOpen(false); setHistoryOpen(false); setInteraction(null); setGuides([]); } }; window.addEventListener("keydown", keyHandler); return () => window.removeEventListener("keydown", keyHandler); });
   const numeric = (key: "x" | "y" | "width" | "height" | "rotation" | "fontSize", value: string) => updateSelected({ [key]: Number(value) } as Partial<DesignElement>);
   const marqueeStyle = interaction?.kind === "marquee" ? { left: Math.min(interaction.startX, interaction.currentX), top: Math.min(interaction.startY, interaction.currentY), width: Math.abs(interaction.currentX - interaction.startX), height: Math.abs(interaction.currentY - interaction.startY) } : null;
   const activeProject = projects.find((project) => project.id === activeProjectId);
