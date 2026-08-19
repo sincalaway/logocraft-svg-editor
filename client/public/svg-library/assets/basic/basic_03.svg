@@ -1,0 +1,21 @@
+<svg version="1.1" id="图层_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 width="100px" height="100px" viewBox="0 0 100 100" enable-background="new 0 0 100 100" xml:space="preserve">
+	 <linearGradient class="linearGradient" x1="0%" y1="0%" x2="0%" y2="100%" gradientTransform="translate(0.5,0.5) rotate(0) translate(-0.5,-0.5)">
+		<stop id="stop1" offset="0%" class="linearGradientColor1" stop-color="#05a" />
+		<stop id="stop2" offset="100%" class="linearGradientColor2" stop-color="#0a5"/>
+	</linearGradient>
+
+	<radialGradient class="radialGradient" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
+		<stop offset="0%" class="radialGradientColor1" stop-color="#05a"/>
+		<stop offset="100%" class="radialGradientColor2" stop-color="#0a5"/>
+	</radialGradient>
+	<clipPath id="f_unfill_corner" class="clipPath">
+		<path  fill="none" stroke="#dddddd" stroke-width="1" stroke-miterlimit="10" d="M0,12v76c6,0,12,8,12,12h76c0-6,6-12,11.999-12V12c-5.999,0-11.999-6.001-11.999-12h-76.23
+		C12.001,5.999,6,12,0,12z"/>
+	</clipPath>
+<path class="fill-color" fill="#343C49" opacity="1" d="M1,12.76v74.48c5.88,0,11.76,7.84,11.76,11.76h74.48c0-5.88,5.88-11.76,11.76-11.76V12.76
+	c-5.88,0-11.76-5.88-11.76-11.76H12.535C12.76,6.88,6.88,12.76,1,12.76z"
+	/>
+<path class="stroke-color" fill="none" stroke="#dddddd" stroke-width="0" stroke-miterlimit="10" d="M0,12v76c6,0,12,8,12,12h76c0-6,6-12,11.999-12V12c-5.999,0-11.999-6.001-11.999-12h-76.23
+		C12.001,5.999,6,12,0,12z" clip-path="url(#f_unfill_corner)"/>
+</svg>

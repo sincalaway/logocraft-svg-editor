@@ -1,0 +1,19 @@
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 width="100px" height="97.49px" viewBox="0 -0.081 100 97.49" enable-background="new 0 -0.081 100 97.49" xml:space="preserve">
+	 <linearGradient class="linearGradient" x1="0%" y1="0%" x2="0%" y2="100%" gradientTransform="translate(0.5,0.5) rotate(0) translate(-0.5,-0.5)">
+		<stop id="stop1" offset="0%" class="linearGradientColor1" stop-color="#05a" />
+		<stop id="stop2" offset="100%" class="linearGradientColor2" stop-color="#0a5"/>
+	</linearGradient>
+
+	<radialGradient class="radialGradient" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
+		<stop offset="0%" class="radialGradientColor1" stop-color="#05a"/>
+		<stop offset="100%" class="radialGradientColor2" stop-color="#0a5"/>
+	</radialGradient>
+	<clipPath id="f_heptagon" class="clipPath">
+		<polygon fill="none" stroke="#dddddd" stroke-width="1" stroke-miterlimit="10" points="27.747,97.49 0,62.698 9.902,19.308
+	49.998,0 90.096,19.308 100,62.698 72.248,97.49 "/>
+	</clipPath>
+	<polygon fill="#343C49" opacity="1" class="fill-color" points="28.192,96.516 1,62.42 10.704,19.896 49.998,0.975 89.294,19.896 99,62.42 71.803,96.516"/>
+	<polygon class="stroke-color" fill="none" stroke="#dddddd" stroke-width="0" stroke-miterlimit="10" points="27.747,97.49 0,62.698 9.902,19.308
+	49.998,0 90.096,19.308 100,62.698 72.248,97.49 " clip-path="url(#f_heptagon)"/>
+</svg>

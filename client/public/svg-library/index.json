@@ -1,0 +1,277 @@
+{
+  "version": 1,
+  "generatedAt": "2026-08-19T14:16:25.978Z",
+  "total": 5145,
+  "categories": [
+    {
+      "id": "abstract",
+      "name": "Abstract",
+      "count": 38,
+      "manifest": "/svg-library/catalog/abstract.json"
+    },
+    {
+      "id": "accounting-financial",
+      "name": "Accounting & Financial",
+      "count": 141,
+      "manifest": "/svg-library/catalog/accounting-financial.json"
+    },
+    {
+      "id": "agriculture",
+      "name": "Agriculture",
+      "count": 133,
+      "manifest": "/svg-library/catalog/agriculture.json"
+    },
+    {
+      "id": "animals-pets",
+      "name": "Animals & Pets",
+      "count": 145,
+      "manifest": "/svg-library/catalog/animals-pets.json"
+    },
+    {
+      "id": "architectural",
+      "name": "Architectural",
+      "count": 119,
+      "manifest": "/svg-library/catalog/architectural.json"
+    },
+    {
+      "id": "attorney-law",
+      "name": "Attorney & Law",
+      "count": 100,
+      "manifest": "/svg-library/catalog/attorney-law.json"
+    },
+    {
+      "id": "automotive-vehicle",
+      "name": "Automotive & Vehicle",
+      "count": 145,
+      "manifest": "/svg-library/catalog/automotive-vehicle.json"
+    },
+    {
+      "id": "badges",
+      "name": "badges",
+      "count": 38,
+      "manifest": "/svg-library/catalog/badges.json"
+    },
+    {
+      "id": "basic",
+      "name": "basic",
+      "count": 50,
+      "manifest": "/svg-library/catalog/basic.json"
+    },
+    {
+      "id": "business-consulting",
+      "name": "Business & Consulting",
+      "count": 89,
+      "manifest": "/svg-library/catalog/business-consulting.json"
+    },
+    {
+      "id": "children-childcare",
+      "name": "Children & Childcare",
+      "count": 157,
+      "manifest": "/svg-library/catalog/children-childcare.json"
+    },
+    {
+      "id": "cleaning-maintenance",
+      "name": "Cleaning & Maintenance",
+      "count": 100,
+      "manifest": "/svg-library/catalog/cleaning-maintenance.json"
+    },
+    {
+      "id": "clipart",
+      "name": "clipart",
+      "count": 26,
+      "manifest": "/svg-library/catalog/clipart.json"
+    },
+    {
+      "id": "communications",
+      "name": "Communications",
+      "count": 111,
+      "manifest": "/svg-library/catalog/communications.json"
+    },
+    {
+      "id": "community-non-profit",
+      "name": "Community & Non-Profit",
+      "count": 149,
+      "manifest": "/svg-library/catalog/community-non-profit.json"
+    },
+    {
+      "id": "computer",
+      "name": "Computer",
+      "count": 122,
+      "manifest": "/svg-library/catalog/computer.json"
+    },
+    {
+      "id": "construction-tools",
+      "name": "Construction & Tools",
+      "count": 81,
+      "manifest": "/svg-library/catalog/construction-tools.json"
+    },
+    {
+      "id": "dating",
+      "name": "Dating",
+      "count": 108,
+      "manifest": "/svg-library/catalog/dating.json"
+    },
+    {
+      "id": "decorative",
+      "name": "decorative",
+      "count": 78,
+      "manifest": "/svg-library/catalog/decorative.json"
+    },
+    {
+      "id": "education",
+      "name": "Education",
+      "count": 142,
+      "manifest": "/svg-library/catalog/education.json"
+    },
+    {
+      "id": "entertainment-the-arts",
+      "name": "Entertainment & The Arts",
+      "count": 129,
+      "manifest": "/svg-library/catalog/entertainment-the-arts.json"
+    },
+    {
+      "id": "enviromental-green",
+      "name": "Enviromental & Green",
+      "count": 164,
+      "manifest": "/svg-library/catalog/enviromental-green.json"
+    },
+    {
+      "id": "fashion-beauty",
+      "name": "Fashion & Beauty",
+      "count": 123,
+      "manifest": "/svg-library/catalog/fashion-beauty.json"
+    },
+    {
+      "id": "floral",
+      "name": "Floral",
+      "count": 125,
+      "manifest": "/svg-library/catalog/floral.json"
+    },
+    {
+      "id": "food-drink",
+      "name": "Food & Drink",
+      "count": 202,
+      "manifest": "/svg-library/catalog/food-drink.json"
+    },
+    {
+      "id": "games-recreation",
+      "name": "Games & Recreation",
+      "count": 86,
+      "manifest": "/svg-library/catalog/games-recreation.json"
+    },
+    {
+      "id": "home-furnishings",
+      "name": "Home Furnishings",
+      "count": 100,
+      "manifest": "/svg-library/catalog/home-furnishings.json"
+    },
+    {
+      "id": "industrial",
+      "name": "Industrial",
+      "count": 101,
+      "manifest": "/svg-library/catalog/industrial.json"
+    },
+    {
+      "id": "internet",
+      "name": "Internet",
+      "count": 115,
+      "manifest": "/svg-library/catalog/internet.json"
+    },
+    {
+      "id": "landscaping",
+      "name": "Landscaping",
+      "count": 133,
+      "manifest": "/svg-library/catalog/landscaping.json"
+    },
+    {
+      "id": "lines",
+      "name": "lines",
+      "count": 88,
+      "manifest": "/svg-library/catalog/lines.json"
+    },
+    {
+      "id": "medical-pharmaceutical",
+      "name": "Medical & Pharmaceutical",
+      "count": 156,
+      "manifest": "/svg-library/catalog/medical-pharmaceutical.json"
+    },
+    {
+      "id": "photography",
+      "name": "Photography",
+      "count": 103,
+      "manifest": "/svg-library/catalog/photography.json"
+    },
+    {
+      "id": "politics",
+      "name": "Politics",
+      "count": 80,
+      "manifest": "/svg-library/catalog/politics.json"
+    },
+    {
+      "id": "real-estate-mortgage",
+      "name": "Real Estate & Mortgage",
+      "count": 182,
+      "manifest": "/svg-library/catalog/real-estate-mortgage.json"
+    },
+    {
+      "id": "religious",
+      "name": "Religious",
+      "count": 56,
+      "manifest": "/svg-library/catalog/religious.json"
+    },
+    {
+      "id": "retail",
+      "name": "Retail",
+      "count": 102,
+      "manifest": "/svg-library/catalog/retail.json"
+    },
+    {
+      "id": "security",
+      "name": "Security",
+      "count": 135,
+      "manifest": "/svg-library/catalog/security.json"
+    },
+    {
+      "id": "spa-esthetics",
+      "name": "Spa & Esthetics",
+      "count": 82,
+      "manifest": "/svg-library/catalog/spa-esthetics.json"
+    },
+    {
+      "id": "sports",
+      "name": "Sports",
+      "count": 146,
+      "manifest": "/svg-library/catalog/sports.json"
+    },
+    {
+      "id": "swooshes",
+      "name": "swooshes",
+      "count": 17,
+      "manifest": "/svg-library/catalog/swooshes.json"
+    },
+    {
+      "id": "symbols",
+      "name": "symbols",
+      "count": 311,
+      "manifest": "/svg-library/catalog/symbols.json"
+    },
+    {
+      "id": "technology",
+      "name": "Technology",
+      "count": 77,
+      "manifest": "/svg-library/catalog/technology.json"
+    },
+    {
+      "id": "travel-hotel",
+      "name": "Travel & Hotel",
+      "count": 160,
+      "manifest": "/svg-library/catalog/travel-hotel.json"
+    },
+    {
+      "id": "wedding-services",
+      "name": "Wedding Services",
+      "count": 100,
+      "manifest": "/svg-library/catalog/wedding-services.json"
+    }
+  ]
+}

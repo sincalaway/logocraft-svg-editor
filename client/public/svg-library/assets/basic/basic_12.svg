@@ -1,0 +1,19 @@
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 width="100px" height="95.107px" viewBox="0 -0.093 100 95.107" enable-background="new 0 -0.093 100 95.107" xml:space="preserve">
+	 <linearGradient class="linearGradient" x1="0%" y1="0%" x2="0%" y2="100%" gradientTransform="translate(0.5,0.5) rotate(0) translate(-0.5,-0.5)">
+		<stop id="stop1" offset="0%" class="linearGradientColor1" stop-color="#05a" />
+		<stop id="stop2" offset="100%" class="linearGradientColor2" stop-color="#0a5"/>
+	</linearGradient>
+
+	<radialGradient class="radialGradient" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
+		<stop offset="0%" class="radialGradientColor1" stop-color="#05a"/>
+		<stop offset="100%" class="radialGradientColor2" stop-color="#0a5"/>
+	</radialGradient>
+	<clipPath id="f_pentagon" class="clipPath">
+		<polygon fill="none" stroke="#dddddd" stroke-width="1" stroke-miterlimit="10" points="19.099,95.108 0,36.326 50,-0.001
+	100,36.326 80.9,95.108 "/>
+	</clipPath>
+	<polygon fill="#343C49" opacity="1" class="fill-color" points="19.717,94.157 1,36.551 50,0.95 99,36.551 80.282,94.157 "/>
+	<polygon class="stroke-color" fill="none" stroke="#dddddd" stroke-width="0" stroke-miterlimit="10" points="19.099,95.108 0,36.326 50,-0.001
+	100,36.326 80.9,95.108 " clip-path="url(#f_pentagon)"/>
+</svg>

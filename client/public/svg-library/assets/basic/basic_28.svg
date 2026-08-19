@@ -1,0 +1,20 @@
+<svg version="1.1" id="图层_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 width="71.559px" height="100px" viewBox="0 0 71.559 100" enable-background="new 0 0 71.559 100" xml:space="preserve">
+	 <linearGradient class="linearGradient" x1="0%" y1="0%" x2="0%" y2="100%" gradientTransform="translate(0.5,0.5) rotate(0) translate(-0.5,-0.5)">
+		<stop id="stop1" offset="0%" class="linearGradientColor1" stop-color="#05a" />
+		<stop id="stop2" offset="100%" class="linearGradientColor2" stop-color="#0a5"/>
+	</linearGradient>
+
+	<radialGradient class="radialGradient" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
+		<stop offset="0%" class="radialGradientColor1" stop-color="#05a"/>
+		<stop offset="100%" class="radialGradientColor2" stop-color="#0a5"/>
+	</radialGradient>
+	<clipPath id="f_water_drop" class="clipPath">
+		<path fill="none" stroke="#dddddd" stroke-width="1" stroke-miterlimit="30" d="M35.76,0C16.034,32.979,0.001,46.266,0.001,65.374
+	C0.001,84.479,16.034,100,35.76,100c19.767,0,35.798-15.521,35.798-34.626C71.559,46.266,55.528,32.979,35.76,0L35.76,0z"/>
+	</clipPath>
+	<path class="fill-color" fill="#343C49" opacity="1" d="M35.761,1C16.429,33.319,0.716,46.341,0.716,65.066C0.716,83.789,16.429,99,35.761,99
+	c19.371,0,35.082-15.211,35.082-33.934C70.844,46.341,55.132,33.319,35.761,1L35.761,1z"/>
+	<path class="stroke-color" fill="none" stroke="#dddddd" stroke-width="0" stroke-miterlimit="30" d="M35.76,0C16.034,32.979,0.001,46.266,0.001,65.374
+		C0.001,84.479,16.034,100,35.76,100c19.767,0,35.798-15.521,35.798-34.626C71.559,46.266,55.528,32.979,35.76,0L35.76,0z" clip-path="url(#f_water_drop)"/>
+</svg>

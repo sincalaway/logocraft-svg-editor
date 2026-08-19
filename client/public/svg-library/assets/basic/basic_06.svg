@@ -1,0 +1,25 @@
+<svg version="1.1" id="图层_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 width="100px" height="75.086px" viewBox="0 0 100 75.086" enable-background="new 0 0 100 75.086" xml:space="preserve">
+	 <linearGradient class="linearGradient" x1="0%" y1="0%" x2="0%" y2="100%" gradientTransform="translate(0.5,0.5) rotate(0) translate(-0.5,-0.5)">
+		<stop id="stop1" offset="0%" class="linearGradientColor1" stop-color="#05a" />
+		<stop id="stop2" offset="100%" class="linearGradientColor2" stop-color="#0a5"/>
+	</linearGradient>
+
+	<radialGradient class="radialGradient" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
+		<stop offset="0%" class="radialGradientColor1" stop-color="#05a"/>
+		<stop offset="100%" class="radialGradientColor2" stop-color="#0a5"/>
+	</radialGradient>
+	<clipPath id="f_tooltip2" class="clipPath">
+		<path fill="none" stroke="#dddddd" stroke-width="1" stroke-miterlimit="10" d="M34.924,75.086
+	c1.896-2.34,3.771-5.568,3.771-9.215c0-1.072-0.163-2.178-0.533-3.31l-0.196-0.596l-0.62-0.104C15.356,58.241,0,45.732,0,31.441
+	C0,14.104,22.43,0,49.999,0S100,14.104,100,31.441c0,16.848-21.789,30.943-48.569,31.42l-0.643,0.01l-0.276,0.583
+	C48.173,68.382,40.201,72.677,34.924,75.086z"/>
+	</clipPath>
+	<path class="fill-color" fill="#343C49" opacity="1" d="M35.625,74.522c1.858-2.293,3.296-5.645,3.296-9.218c0-1.051-0.159-2.135-0.522-3.244l-0.192-0.584
+	L37.6,61.375C16.049,57.827,1,45.568,1,31.563C1,14.573,22.981,0.751,49.999,0.751C77.018,0.751,99,14.573,99,31.563
+	c0,16.511-21.354,30.324-47.598,30.792l-0.631,0.01l-0.271,0.57C48.209,67.766,40.796,72.162,35.625,74.522z"/>
+	<path class="stroke-color" fill="none" stroke="#dddddd" stroke-width="0" stroke-miterlimit="10" d="M34.924,75.086
+		c1.896-2.34,3.771-5.568,3.771-9.215c0-1.072-0.163-2.178-0.533-3.31l-0.196-0.596l-0.62-0.104C15.356,58.241,0,45.732,0,31.441
+		C0,14.104,22.43,0,49.999,0S100,14.104,100,31.441c0,16.848-21.789,30.943-48.569,31.42l-0.643,0.01l-0.276,0.583
+		C48.173,68.382,40.201,72.677,34.924,75.086z" clip-path="url(#f_tooltip2)"/>
+</svg>

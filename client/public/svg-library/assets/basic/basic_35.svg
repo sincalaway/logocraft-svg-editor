@@ -1,0 +1,26 @@
+<svg version="1.1" id="图层_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 width="100px" height="98.479px" viewBox="0 0 100 98.479" enable-background="new 0 0 100 98.479" xml:space="preserve">
+	 <linearGradient class="linearGradient" x1="0%" y1="0%" x2="0%" y2="100%" gradientTransform="translate(0.5,0.5) rotate(0) translate(-0.5,-0.5)">
+		<stop id="stop1" offset="0%" class="linearGradientColor1" stop-color="#05a" />
+		<stop id="stop2" offset="100%" class="linearGradientColor2" stop-color="#0a5"/>
+	</linearGradient>
+
+	<radialGradient class="radialGradient" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
+		<stop offset="0%" class="radialGradientColor1" stop-color="#05a"/>
+		<stop offset="100%" class="radialGradientColor2" stop-color="#0a5"/>
+	</radialGradient>
+	<clipPath id="f_nine_point" class="clipPath">
+		<polygon fill="none" stroke="#dddddd" stroke-width="1" stroke-miterlimit="10" points="50,-0.004 62.154,17.373 82.622,11.876
+		80.766,33.003 100,41.948 84.995,56.93 93.963,76.165 72.839,77.996 67.354,98.483 50,86.316 32.634,98.483 27.149,77.996
+		6.035,76.165 14.994,56.93 0,41.948 19.221,33.003 17.366,11.876 37.831,17.373 	"/>
+	</clipPath>
+
+	<polygon class="fill-color" fill="#343C49" opacity="1" points="50,0.981 61.911,18.01 81.97,12.623 80.15,33.328 99,42.094 84.295,56.777 93.084,75.626
+	72.382,77.421 67.007,97.497 50,85.573 32.981,97.497 27.606,77.421 6.915,75.626 15.694,56.777 1,42.094 19.837,33.328
+	18.019,12.623 38.074,18.01 	"/>
+
+	<polygon class="stroke-color" fill="none" stroke="#dddddd" stroke-width="0" stroke-miterlimit="10" points="50,-0.004 62.154,17.373 82.622,11.876
+		80.766,33.003 100,41.948 84.995,56.93 93.963,76.165 72.839,77.996 67.354,98.483 50,86.316 32.634,98.483 27.149,77.996
+		6.035,76.165 14.994,56.93 0,41.948 19.221,33.003 17.366,11.876 37.831,17.373 	" clip-path="url(#f_nine_point)"/>
+
+</svg>

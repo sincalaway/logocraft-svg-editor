@@ -1,0 +1,22 @@
+<svg version="1.1" id="图层_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 width="100px" height="86.654px" viewBox="0 0 100 86.654" enable-background="new 0 0 100 86.654" xml:space="preserve">
+	 <linearGradient class="linearGradient" x1="0%" y1="0%" x2="0%" y2="100%" gradientTransform="translate(0.5,0.5) rotate(0) translate(-0.5,-0.5)">
+		<stop id="stop1" offset="0%" class="linearGradientColor1" stop-color="#05a" />
+		<stop id="stop2" offset="100%" class="linearGradientColor2" stop-color="#0a5"/>
+	</linearGradient>
+
+	<radialGradient class="radialGradient" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
+		<stop offset="0%" class="radialGradientColor1" stop-color="#05a"/>
+		<stop offset="100%" class="radialGradientColor2" stop-color="#0a5"/>
+	</radialGradient>
+	<clipPath id="f_heart" class="clipPath">
+		<path fill="none" stroke="#dddddd" stroke-width="1" stroke-miterlimit="10" d="M50,86.654
+	c30.318-26.142,55.07-45.329,49.107-67.822C93.85-1.017,71.193-9.259,50,14.607C28.81-9.259,6.151-1.017,0.893,18.832
+	C-5.07,41.325,19.682,60.513,50,86.654L50,86.654z"/>
+	</clipPath>
+	<path class="fill-color" fill="#343C49" opacity="1" d="M50,85.788c29.712-25.619,53.969-44.423,48.125-66.466C92.973-0.13,70.77-8.208,50,15.181
+	C29.234-8.208,7.029-0.13,1.875,19.322C-3.969,41.365,20.288,60.17,50,85.788L50,85.788z"/>
+	<path class="stroke-color" fill="none" stroke="#dddddd" stroke-width="0" stroke-miterlimit="10" d="M50,86.654
+		c30.318-26.142,55.07-45.329,49.107-67.822C93.85-1.017,71.193-9.259,50,14.607C28.81-9.259,6.151-1.017,0.893,18.832
+		C-5.07,41.325,19.682,60.513,50,86.654L50,86.654z" clip-path="url(#f_heart)"/>
+</svg>
