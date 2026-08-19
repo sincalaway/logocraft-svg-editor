@@ -1,7 +1,7 @@
 /* Delivery design: deterministic SVG cleanup and LogoCraft export checks for the precision-workbench workflow. */
 export type SvgAuditStatus = "pass" | "warning" | "fail";
 export type SvgAuditCheck = { id: string; label: string; detail: string; status: SvgAuditStatus };
-export type SvgAuditElement = { type: string; name: string; x: number; y: number; width: number; height: number; hidden?: boolean; fill: string };
+export type SvgAuditElement = { type: string; name: string; x: number; y: number; width: number; height: number; hidden?: boolean; fill: string; svgMarkup?: string };
 export type SvgAuditResult = { valid: boolean; optimizedSvg: string; originalBytes: number; optimizedBytes: number; reduction: number; checks: SvgAuditCheck[] };
 
 const escapeTitle = (value: string) => value.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;");
@@ -15,7 +15,7 @@ export function optimizeSvg(svg: string, title: string) {
 export function auditSvgDelivery(svg: string, elements: SvgAuditElement[], artboard: { width: number; height: number }, title: string): SvgAuditResult {
   const optimizedSvg = optimizeSvg(svg, title || "LogoCraft SVG");
   const visible = elements.filter((element) => !element.hidden);
-  const imageLayers = visible.filter((element) => element.type === "image");
+  const imageLayers = visible.filter((element) => element.type === "image" && !element.svgMarkup);
   const invalidColors = visible.filter((element) => !/^#[0-9a-f]{6}$/i.test(element.fill));
   const overflowing = visible.filter((element) => element.x < 0 || element.y < 0 || element.x + element.width > artboard.width || element.y + element.height > artboard.height);
   const colors = new Set(visible.map((element) => element.fill.toUpperCase()));

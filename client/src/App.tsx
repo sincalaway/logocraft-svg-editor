@@ -10,6 +10,7 @@ import MeasurementUnitController from "./components/MeasurementUnitController";
 import OnboardingGuide from "./components/OnboardingGuide";
 import ProductionToolsDock from "./components/ProductionToolsDock";
 import SidebarShortcutPanel from "./components/SidebarShortcutPanel";
+import SvgLibraryPanel from "./components/SvgLibraryPanel";
 import VersionHistoryPanel from "./components/VersionHistoryPanel";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import Home from "./pages/Home";
@@ -36,6 +37,7 @@ export default function App() {
           <EditorUtilityDock />
           <ProductionToolsDock />
           <SidebarShortcutPanel />
+          <SvgLibraryPanel />
           <OnboardingGuide />
           <GlobalCommandPalette />
           <VersionHistoryPanel />
