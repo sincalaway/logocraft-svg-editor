@@ -1,5 +1,6 @@
 import { cp, mkdir, readdir, readFile, rm, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { optimize } from "svgo";
 
 const sourceRoot = process.argv[2];
 const projectRoot = process.cwd();
@@ -29,7 +30,7 @@ const sanitizeSvg = (source) => source
   .replace(/\s+(?:fill|stroke|filter|clip-path|mask)\s*=\s*(?:"\s*url\((?!#)[^"]*\)"|'\s*url\((?!#)[^']*\)'|url\((?!#)[^\s>]*\))/gi, "");
 
 const slug = (value) => value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "uncategorized";
-const publicUrl = (relativePath) => `/svg-library/assets/${relativePath.split(path.sep).map(encodeURIComponent).join("/")}`;
+const publicUrl = (relativePath) => `/svg-library/assets/${relativePath.split(path.sep).map((segment) => encodeURI(segment).replace(/#/g, "%23").replace(/\?/g, "%3F")).join("/")}`;
 
 await rm(outputRoot, { recursive: true, force: true });
 await mkdir(assetsRoot, { recursive: true });
@@ -47,14 +48,19 @@ for (const sourceFile of sourceFiles) {
   const fileInfo = await stat(sourceFile);
   if (fileInfo.size > maxSvgBytes) { skipped += 1; continue; }
   const original = await readFile(sourceFile, "utf8");
-  const sanitized = sanitizeSvg(original).replace(/^\uFEFF/, "").replace(/^\s*<\?xml[^>]*\?>/i, "").trim();
+  let sanitized = sanitizeSvg(original).replace(/^\uFEFF/, "").replace(/^\s*<\?xml[^>]*\?>/i, "").trim();
   if (!/^<svg\b/i.test(sanitized)) { skipped += 1; continue; }
+  if (!/<(?:path|rect|circle|ellipse|polygon|polyline|line|text|use)\b/i.test(sanitized)) { skipped += 1; continue; }
+  if (Buffer.byteLength(sanitized) > 1024 * 1024) sanitized = optimize(sanitized, { multipass: true }).data;
+  if (Buffer.byteLength(sanitized) > 1024 * 1024) sanitized = optimize(sanitized, { multipass: true, floatPrecision: 0 }).data;
+  if (Buffer.byteLength(sanitized) > 1024 * 1024) { skipped += 1; continue; }
   const destination = path.join(assetsRoot, relativePath);
   await mkdir(path.dirname(destination), { recursive: true });
   await writeFile(destination, sanitized, "utf8");
   const categoryName = parts[0];
   const entries = categories.get(categoryName) ?? [];
-  entries.push({ id: slug(`${categoryName}-${path.basename(parts[1], ".svg")}`), name: path.basename(parts[1], ".svg"), path: publicUrl(relativePath) });
+  const entry = { id: slug(`${categoryName}-${path.basename(parts[1], ".svg")}`), name: path.basename(parts[1], ".svg"), path: publicUrl(relativePath) };
+  entries.push(entry);
   categories.set(categoryName, entries);
   totalBytes += Buffer.byteLength(sanitized);
 }
