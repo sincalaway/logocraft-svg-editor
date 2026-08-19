@@ -52,7 +52,10 @@
 
 @layer components {
   .editor-shell {
+    height: 100dvh;
+    max-height: 100dvh;
     min-height: 100dvh;
+    overflow: hidden;
     background-color: #151517;
     background-image: radial-gradient(circle at 18% 8%, rgba(255,107,53,.055), transparent 24%), radial-gradient(rgba(255,255,255,.04) .55px, transparent .55px), linear-gradient(112deg, rgba(255,255,255,.018), transparent 42%), linear-gradient(rgba(21,21,23,.9), rgba(21,21,23,.97));
     background-size: auto, 14px 14px, auto, auto;
@@ -68,6 +71,18 @@
   .topbar > div:first-child::after { content: "FILE / LC-03 · SVG · A01"; position: absolute; right: .42rem; bottom: -4px; color: rgba(219,215,208,.58); font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 7px; font-weight: 900; letter-spacing: .11em; }
   .topbar > div:first-child::before { content: "⊙"; position: absolute; right: .45rem; top: 0; color: #ff6b35; font-size: 9px; }
   .panel { background-color: rgba(29,29,32,.93); background-image: linear-gradient(180deg, rgba(255,255,255,.02), transparent 64px), repeating-linear-gradient(180deg, transparent 0 29px, rgba(255,255,255,.012) 29px 30px); box-shadow: inset 0 1px 0 rgba(255,255,255,.035), inset -1px 0 rgba(0,0,0,.22); }
+  /* Inspector viewport contract: the shell never grows past the browser viewport; only the inspector body scrolls. */
+  .editor-shell > div { min-height: 0; overflow: hidden; }
+  .editor-shell > div > aside:last-child { min-height: 0; height: 100%; overflow: hidden; }
+  .editor-shell > div > aside:last-child > div:nth-child(2) { min-height: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-gutter: stable; }
+  .editor-shell > div > aside:last-child > div:last-child { flex: none; max-height: min(214px, 30dvh); overflow-y: auto; overscroll-behavior: contain; scrollbar-gutter: stable; }
+  @media (max-height: 840px) and (min-width: 1024px) {
+    .editor-shell > div > aside:last-child > div:first-child { padding-top: .72rem; padding-bottom: .72rem; }
+    .editor-shell > div > aside:last-child > div:last-child { max-height: min(178px, 26dvh); padding: .56rem; }
+    .editor-shell > div > aside:last-child > div:last-child .mb-2 { margin-bottom: .32rem; }
+    .editor-shell > div > aside:last-child > div:last-child .mt-2 { margin-top: .35rem; }
+    .editor-shell > div > aside:last-child > div:last-child > button { min-height: 28px; margin-top: .35rem; }
+  }
   .canvas-workbench { background-image: radial-gradient(circle at 50% 45%, rgba(255,248,238,.075), transparent 32%), linear-gradient(90deg, rgba(255,255,255,.018) 1px, transparent 1px), linear-gradient(rgba(255,255,255,.018) 1px, transparent 1px); background-size: auto, 56px 56px, 56px 56px; }
   .canvas-workbench > div:first-child { color: #a7a3a1; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; letter-spacing: .13em; }
   .canvas-viewport { background: radial-gradient(ellipse at center, rgba(255,255,255,.018), transparent 54%); }
@@ -299,6 +314,15 @@
   .brand-plate::after { position: absolute; right: 1.02rem; bottom: 5px; width: 24px; height: 1px; background: linear-gradient(90deg, #ff6b35 0 7px, rgba(255,255,255,.42) 7px 9px, #ff6b35 9px 16px, transparent 16px); content: ""; }
   .specimen-card::after { color: rgba(226,223,216,.6); content: "LC / ARC · CUT"; }
   .specimen-card { box-shadow: inset 0 -1px rgba(0,0,0,.42), inset 1px 0 rgba(255,255,255,.025); }
+  /* Precision pass: nameplate, tool-tray metadata, and neutral drafting stock are ranked without widening amber use. */
+  .brand-plate { align-self: stretch; min-width: 230px; box-shadow: inset 0 1px rgba(255,255,255,.08), inset 0 -1px rgba(0,0,0,.76), 12px 0 24px rgba(0,0,0,.25); }
+  .brand-plate > div:nth-child(2) { position: relative; padding-right: .72rem; }
+  .brand-plate > div:nth-child(2)::after { position: absolute; right: 0; bottom: .13rem; margin: 0; font-size: 7px; }
+  .topbar > div:first-child::after { color: rgba(232,227,218,.72); font-size: 7px; letter-spacing: .15em; }
+  .panel .section-label { color: #d8d3cc; letter-spacing: .2em; }
+  .inspector-field label, .panel .technical-number { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; letter-spacing: .1em; }
+  .inspector-field input, .inspector-field select { border-left-color: rgba(255,255,255,.14); box-shadow: inset 0 1px rgba(255,255,255,.025); }
+  .paper-canvas { background-color: #fcf9f2; background-image: radial-gradient(rgba(49,44,38,.032) .5px, transparent .5px), linear-gradient(110deg, rgba(255,255,255,.72), rgba(255,251,244,.16) 55%, transparent 100%) !important; background-size: 7px 7px, 100% 100% !important; }
   @media (min-width: 1024px) {
     .editor-shell > div > aside:last-child { display: flex !important; width: var(--inspector-panel-width, 306px) !important; flex-direction: column; }
     html[data-inspector-collapsed="true"] .editor-shell > div > aside:last-child { display: none !important; }
