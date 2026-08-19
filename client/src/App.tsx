@@ -4,6 +4,7 @@ import NotFound from "@/pages/NotFound";
 import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import EditorUtilityDock from "./components/EditorUtilityDock";
+import InspectorLayoutController from "./components/InspectorLayoutController";
 import CanvasReferenceOverlay from "./components/CanvasReferenceOverlay";
 import GlobalCommandPalette from "./components/GlobalCommandPalette";
 import MeasurementUnitController from "./components/MeasurementUnitController";
@@ -32,6 +33,7 @@ export default function App() {
         <TooltipProvider>
           <Toaster richColors position="top-center" />
           <Router />
+          <InspectorLayoutController />
           <CanvasReferenceOverlay />
           <MeasurementUnitController />
           <EditorUtilityDock />
