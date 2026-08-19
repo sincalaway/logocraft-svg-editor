@@ -259,6 +259,29 @@
   @media (min-width: 640px) { .svg-library-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
   @media (min-width: 1024px) { .svg-library-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
   @media (max-width: 640px) { .svg-library-hover-preview { display: none; } }
+  /* Narrow-desktop safeguard: preserve a complete inspector column rather than letting it fall beyond the visible workbench. */
+  @media (min-width: 1024px) and (max-width: 1279px) {
+    .editor-shell > div > aside:last-child { display: flex; width: clamp(250px, 25vw, 278px); flex-direction: column; }
+    .editor-shell > div > aside:last-child .inspector-field { min-width: 0; }
+    .editor-shell > div > aside:last-child .inspector-field input { min-width: 0; font-size: 11px; }
+    .editor-shell > div > aside:last-child .draft-row { min-width: 0; }
+  }
+  /* Visual-review reinforcement: the artboard remains the luminous physical datum; the lockup reads as a calibrated instrument plate. */
+  .brand-plate { min-width: 192px; padding-right: 2rem !important; background: linear-gradient(90deg, rgba(255,107,53,.14), rgba(255,107,53,.035) 56%, transparent), repeating-linear-gradient(90deg, transparent 0 15px, rgba(255,255,255,.032) 15px 16px) !important; }
+  .brand-plate > div:first-child { width: 40px !important; height: 40px !important; border-radius: 2px !important; border-color: rgba(255,107,53,.38) !important; box-shadow: inset 0 0 0 1px rgba(255,107,53,.2), inset 0 1px rgba(255,255,255,.16), 0 0 0 4px rgba(255,107,53,.045), 8px 8px 20px rgba(0,0,0,.25) !important; }
+  .brand-plate > div:nth-child(2) { padding-left: .08rem; }
+  .brand-plate > div:nth-child(2)::before { display: block; margin-bottom: 2px; color: #a7a19c; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 7px; font-weight: 900; letter-spacing: .16em; content: "INSTRUMENT / LC"; }
+  .brand-plate .technical-muted { color: #d4cec6 !important; letter-spacing: .14em; }
+  .topbar > div:first-child::after { color: rgba(236,227,215,.72); letter-spacing: .14em; }
+  .paper-canvas { background-color: #fffaf0; background-image: radial-gradient(rgba(49,44,38,.075) .55px, transparent .55px), linear-gradient(112deg, rgba(255,255,255,.8), rgba(255,246,231,.28) 45%, transparent 72%) !important; border-color: rgba(255,253,248,.98) !important; box-shadow: 0 96px 156px rgba(0,0,0,.75), 0 30px 46px rgba(0,0,0,.5), 0 0 0 1px rgba(12,11,10,.44), 0 0 0 7px rgba(255,255,255,.038), 0 0 48px rgba(255,244,224,.16), inset 0 0 0 1px rgba(255,255,255,.94), inset 0 -20px 34px rgba(116,103,81,.055) !important; }
+  .paper-canvas::after { inset: 5px; border-top-color: rgba(25,23,21,.2); border-bottom-color: rgba(255,255,255,.9); box-shadow: inset 0 0 0 1px rgba(255,107,53,.05); }
+  .bleed-frame { outline-color: rgba(88,150,170,.92); box-shadow: 0 0 0 12px rgba(255,255,255,.024), 0 0 52px rgba(255,248,235,.07); }
+  .drafting-ruler { color: #c1bbba; font-size: 8px; font-weight: 800; text-shadow: 0 1px #0c0c0d, 0 0 12px rgba(255,255,255,.08); }
+  .drafting-ruler-top, .drafting-ruler-left { border-color: rgba(255,255,255,.2); }
+  .canvas-registration { color: rgba(46,41,36,.64); font-weight: 900; letter-spacing: .09em; }
+  .canvas-registration::before { box-shadow: 0 0 0 2px rgba(255,107,53,.12); }
+  .panel .section-label { color: #d4cec6; }
+  .panel .technical-number { color: #aaa4a0; font-size: 9px; }
   .command-palette { width: min(610px, calc(100vw - 2rem)); overflow: hidden; border-radius: 0; background: #202023; box-shadow: 0 30px 92px rgba(0,0,0,.68); }
   .command-palette-head { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,.1); padding: .58rem .75rem .52rem; background: linear-gradient(90deg, rgba(255,107,53,.1), transparent 46%); }
   .command-palette-head kbd, .command-palette-shortcut { color: #ff9a77 !important; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 9px; letter-spacing: .05em; }
