@@ -289,6 +289,16 @@
   .inspector-rail-button:active { transform: scale(.97); }
   .inspector-width-button { border-top: 1px solid rgba(255,255,255,.08); color: #a8a4a0; }
   .inspector-drawer-scrim { position: fixed; inset: 0; z-index: 73; background: rgba(5,5,7,.52); backdrop-filter: blur(2px); }
+  .inspector-resize-handle { position: fixed; top: 62px; right: calc(var(--inspector-panel-width, 306px) - 5px); bottom: 0; z-index: 75; width: 10px; cursor: col-resize; touch-action: none; }
+  .inspector-resize-handle::before { position: absolute; top: 50%; left: 4px; height: 52px; width: 1px; background: linear-gradient(180deg, transparent, rgba(255,107,53,.82) 25%, rgba(255,107,53,.82) 75%, transparent); box-shadow: 0 0 0 1px rgba(0,0,0,.35); content: ""; opacity: .45; transition: opacity 160ms ease, height 160ms ease; }
+  .inspector-resize-handle:hover::before, .inspector-resize-handle:focus-visible::before, html[data-inspector-resizing="true"] .inspector-resize-handle::before { height: 96px; opacity: 1; }
+  html[data-inspector-resizing="true"], html[data-inspector-resizing="true"] * { cursor: col-resize !important; user-select: none !important; }
+  /* Refined workbench hierarchy: the paper sheet remains the luminous datum, while construction trays stay materially secondary. */
+  .paper-canvas { box-shadow: 0 108px 172px rgba(0,0,0,.78), 0 34px 52px rgba(0,0,0,.54), 0 0 0 1px rgba(12,11,10,.48), 0 0 0 8px rgba(255,255,255,.044), 0 0 58px rgba(255,244,224,.19), inset 0 0 0 1px rgba(255,255,255,.98), inset 0 -22px 36px rgba(116,103,81,.06) !important; }
+  .bleed-frame::after { position: absolute; z-index: -1; inset: -24px; background: linear-gradient(#ff6b35,#ff6b35) 50% 0/1px 11px no-repeat, linear-gradient(#ff6b35,#ff6b35) 50% 100%/1px 11px no-repeat, linear-gradient(90deg,#ff6b35,#ff6b35) 0 50%/11px 1px no-repeat, linear-gradient(90deg,#ff6b35,#ff6b35) 100% 50%/11px 1px no-repeat; content: ""; opacity: .7; pointer-events: none; }
+  .brand-plate::after { position: absolute; right: 1.02rem; bottom: 5px; width: 24px; height: 1px; background: linear-gradient(90deg, #ff6b35 0 7px, rgba(255,255,255,.42) 7px 9px, #ff6b35 9px 16px, transparent 16px); content: ""; }
+  .specimen-card::after { color: rgba(226,223,216,.6); content: "LC / ARC · CUT"; }
+  .specimen-card { box-shadow: inset 0 -1px rgba(0,0,0,.42), inset 1px 0 rgba(255,255,255,.025); }
   @media (min-width: 1024px) {
     .editor-shell > div > aside:last-child { display: flex !important; width: var(--inspector-panel-width, 306px) !important; flex-direction: column; }
     html[data-inspector-collapsed="true"] .editor-shell > div > aside:last-child { display: none !important; }
@@ -296,6 +306,7 @@
   }
   @media (min-width: 768px) and (max-width: 1023px) {
     .editor-shell > div > aside:last-child { display: none !important; }
+    .inspector-resize-handle { display: none; }
     html[data-inspector-drawer="true"] .editor-shell > div > aside:last-child { position: fixed; top: 62px; right: 0; bottom: 0; z-index: 76; display: flex !important; width: min(var(--inspector-panel-width, 352px), calc(100vw - 52px)) !important; max-width: calc(100vw - 52px); border-left: 1px solid rgba(255,255,255,.14); box-shadow: -22px 0 48px rgba(0,0,0,.48); animation: inspector-drawer-in 220ms cubic-bezier(.23,1,.32,1); }
     .inspector-control-rail-tablet { top: auto; right: 14px; bottom: 14px; flex-direction: row; transform: none; border-right: 1px solid rgba(255,255,255,.12); }
     .inspector-control-rail-tablet .inspector-width-button { border-top: 0; border-left: 1px solid rgba(255,255,255,.08); }
