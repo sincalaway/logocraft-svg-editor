@@ -49,9 +49,17 @@ export default function InspectorLayoutController() {
     try { window.localStorage.setItem(INSPECTOR_PREFERENCE_KEY, JSON.stringify(next)); } catch { /* Layout preference is optional and should never interrupt editing. */ }
   }, [profile, panelWidth, collapsed]);
   useEffect(() => {
-    const onKey = (event: KeyboardEvent) => { if (event.key === "Escape" && drawerOpen) setDrawerOpen(false); };
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && drawerOpen) setDrawerOpen(false);
+      if (event.defaultPrevented || !event.altKey || event.key !== "]") return;
+      const target = event.target as HTMLElement | null;
+      if (target?.closest("input, textarea, select, [contenteditable='true']")) return;
+      event.preventDefault();
+      if (profile === "tablet") setDrawerOpen((open) => !open);
+      else if (profile !== "compact") setCollapsed((value) => !value);
+    };
     window.addEventListener("keydown", onKey); return () => window.removeEventListener("keydown", onKey);
-  }, [drawerOpen]);
+  }, [drawerOpen, profile]);
 
   const cycleWidth = () => { if (!widths.length) return; const current = widths.indexOf(panelWidth); setPanelWidth(widths[(current + 1) % widths.length]); };
   const applyWidthDelta = (delta: number) => { if (profile === "compact") return; setPanelWidth((current) => snapWidth(current + delta, widthBounds[profile])); };
@@ -74,7 +82,7 @@ export default function InspectorLayoutController() {
     {profile === "tablet" && drawerOpen && <button className="inspector-drawer-scrim" aria-label="关闭检查器抽屉" onClick={() => setDrawerOpen(false)} />}
     {profile !== "tablet" && !collapsed && <button className="inspector-resize-handle" aria-label="拖拽调整右侧检查器宽度" aria-orientation="vertical" aria-valuemin={widthBounds[profile][0]} aria-valuemax={widthBounds[profile][1]} aria-valuenow={panelWidth} role="separator" title="拖拽调整检查器宽度；方向键微调" onPointerDown={beginResize} onKeyDown={resizeKeyDown} />}
     <div className={`inspector-control-rail ${profile === "tablet" ? "inspector-control-rail-tablet" : ""}`}>
-      <button className="inspector-rail-button" title={profile === "tablet" ? (drawerOpen ? "关闭检查器抽屉" : "打开检查器抽屉") : (collapsed ? "展开右侧检查器" : "折叠右侧检查器")} aria-expanded={profile === "tablet" ? drawerOpen : !collapsed} aria-controls="logocraft-inspector" onClick={() => profile === "tablet" ? setDrawerOpen((open) => !open) : setCollapsed((value) => !value)}>{profile === "tablet" ? drawerOpen ? <X size={15} /> : <SlidersHorizontal size={15} /> : collapsed ? <PanelRightOpen size={15} /> : <PanelRightClose size={15} />}<span>{profile === "tablet" ? "检查器" : collapsed ? "展开" : "收起"}</span></button>
+      <button className="inspector-rail-button" title={profile === "tablet" ? (drawerOpen ? "关闭检查器抽屉（Alt+]）" : "打开检查器抽屉（Alt+]）") : (collapsed ? "展开右侧检查器（Alt+]）" : "收起右侧检查器（Alt+]）")} aria-expanded={profile === "tablet" ? drawerOpen : !collapsed} aria-controls="logocraft-inspector" onClick={() => profile === "tablet" ? setDrawerOpen((open) => !open) : setCollapsed((value) => !value)}>{profile === "tablet" ? drawerOpen ? <X size={15} /> : <SlidersHorizontal size={15} /> : collapsed ? <PanelRightOpen size={15} /> : <PanelRightClose size={15} />}<span>{profile === "tablet" ? "检查器" : collapsed ? "展开" : "收起"}</span></button>
       {(profile === "tablet" ? drawerOpen : !collapsed) && <button className="inspector-rail-button inspector-width-button" title="切换此设备的检查器宽度" onClick={cycleWidth}><SlidersHorizontal size={14} /><span className="technical-number">{panelWidth}</span></button>}
     </div>
   </>;

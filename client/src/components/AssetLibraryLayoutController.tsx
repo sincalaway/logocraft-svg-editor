@@ -71,6 +71,18 @@ export default function AssetLibraryLayoutController() {
     }
   }, [profile, collapsed, trayWidth]);
 
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if (event.defaultPrevented || !event.altKey || event.key !== "[") return;
+      const target = event.target as HTMLElement | null;
+      if (target?.closest("input, textarea, select, [contenteditable='true']")) return;
+      event.preventDefault();
+      setCollapsed((value) => !value);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
   const applyWidthDelta = (delta: number) => {
     if (profile === "compact") return;
     setTrayWidth((current) => snapWidth(current + delta, widthBounds[profile]));
@@ -109,13 +121,13 @@ export default function AssetLibraryLayoutController() {
     <button
       className="asset-tray-rail-button"
       type="button"
-      title={collapsed ? "展开左侧素材栏" : "收起左侧素材栏"}
+      title={collapsed ? "展开左侧素材栏（Alt+[）" : "收起左侧素材栏（Alt+[）"}
       aria-controls="logocraft-asset-tray"
       aria-expanded={!collapsed}
       onClick={() => setCollapsed((value) => !value)}
     >
       {collapsed ? <PanelLeftOpen size={16} /> : <PanelLeftClose size={16} />}
-      <span>{collapsed ? "展开素材栏" : "收起素材栏"}</span>
+      <span>{collapsed ? "展开" : "收起"}</span>
     </button>
   </div>
   </>;
