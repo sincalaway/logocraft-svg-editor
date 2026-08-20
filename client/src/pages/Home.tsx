@@ -30,7 +30,7 @@ import { ChangeEvent, PointerEvent as ReactPointerEvent, WheelEvent as ReactWhee
 import JSZip from "jszip";
 import { toast } from "sonner";
 import { auditSvgDelivery } from "@/lib/svg-delivery";
-import { extractSvgColorPalette, inspectSvgColors, replaceSvgGradientStop, replaceSvgPaintColor } from "@/lib/svg-colors";
+import { extractSvgColorPalette, inspectSvgColors, replaceSvgGradientStop, replaceSvgPaintColor, type SvgPaintReplaceScope } from "@/lib/svg-colors";
 import SvgColorInspector from "@/components/SvgColorInspector";
 import CompositeMarkColorInspector from "@/components/CompositeMarkColorInspector";
 
@@ -368,9 +368,10 @@ export default function Home() {
     const inspection = inspectSvgColors(markup);
     commit(elements.map((element) => element.id === selected.id ? { ...element, svgMarkup: markup, fill: inspection.primaryColor, svgColors: inspection.colors } : element), label);
   };
-  const replaceSelectedSvgColor = (fromColor: string, nextColor: string) => {
+  const replaceSelectedSvgColor = (fromColor: string, nextColor: string, scope: SvgPaintReplaceScope) => {
     if (!selected?.svgMarkup) return;
-    updateSelectedSvgMarkup(replaceSvgPaintColor(selected.svgMarkup, fromColor, nextColor), "编辑 SVG 指定颜色");
+    const label = scope === "all" ? "编辑 SVG 所有同色" : scope === "fill" ? "编辑 SVG 填充色" : "编辑 SVG 描边色";
+    updateSelectedSvgMarkup(replaceSvgPaintColor(selected.svgMarkup, fromColor, nextColor, scope), label);
   };
   const editSelectedGradientStop = (gradientId: string, index: number, color: string) => {
     if (!selected?.svgMarkup) return;
