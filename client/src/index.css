@@ -76,6 +76,8 @@
   .editor-shell > div > aside:last-child { min-height: 0; height: 100%; overflow: hidden; }
   .editor-shell > div > aside:last-child > div:nth-child(2) { min-height: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-gutter: stable; }
   .editor-shell > div > aside:last-child > div:last-child { flex: none; max-height: min(214px, 30dvh); overflow-y: auto; overscroll-behavior: contain; scrollbar-gutter: stable; }
+  /* Left asset tray: a graphite edge control collapses only the material library, leaving the primary tool rail intact. */
+  .asset-tray-control-rail { display: none; }
   @media (max-height: 840px) and (min-width: 1024px) {
     .editor-shell > div > aside:last-child > div:first-child { padding-top: .72rem; padding-bottom: .72rem; }
     .editor-shell > div > aside:last-child > div:last-child { max-height: min(178px, 26dvh); padding: .56rem; }
@@ -83,7 +85,17 @@
     .editor-shell > div > aside:last-child > div:last-child .mt-2 { margin-top: .35rem; }
     .editor-shell > div > aside:last-child > div:last-child > button { min-height: 28px; margin-top: .35rem; }
   }
+  @media (min-width: 1024px) {
+    .left-asset-tray { position: relative; min-width: 0; overflow: hidden; transition: width 220ms cubic-bezier(.23,1,.32,1), opacity 160ms ease, border-color 160ms ease; }
+    html[data-asset-tray-collapsed="true"] .left-asset-tray { width: 0 !important; border-right-color: transparent; opacity: 0; pointer-events: none; }
+    .asset-tray-control-rail { position: fixed; top: 73px; left: 291px; z-index: 46; display: block; transition: left 220ms cubic-bezier(.23,1,.32,1); }
+    html[data-asset-tray-collapsed="true"] .asset-tray-control-rail { left: 47px; }
+    .asset-tray-rail-button { display: inline-flex; align-items: center; gap: .38rem; min-height: 34px; border: 1px solid rgba(255,255,255,.12); border-left: 2px solid #ff6b35; background: rgba(28,28,31,.96); padding: 0 .52rem; color: #aaa8aa; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 9px; font-weight: 800; letter-spacing: .05em; box-shadow: 7px 8px 18px rgba(0,0,0,.3), inset 0 1px rgba(255,255,255,.05); backdrop-filter: blur(14px); transition: color 160ms ease, background-color 160ms ease, transform 160ms ease; }
+    .asset-tray-rail-button:hover { background: #29292d; color: #fff8f0; }
+    .asset-tray-rail-button:active { transform: scale(.97); }
+  }
   .canvas-workbench { background-image: radial-gradient(circle at 50% 45%, rgba(255,248,238,.075), transparent 32%), linear-gradient(90deg, rgba(255,255,255,.018) 1px, transparent 1px), linear-gradient(rgba(255,255,255,.018) 1px, transparent 1px); background-size: auto, 56px 56px, 56px 56px; }
+  .editor-shell > div > section > div:nth-child(2) { background-image: radial-gradient(ellipse 44% 42% at 50% 39%, rgba(255,248,238,.105), rgba(255,248,238,.026) 44%, transparent 72%); }
   .canvas-workbench > div:first-child { color: #a7a3a1; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; letter-spacing: .13em; }
   .canvas-viewport { background: radial-gradient(ellipse at center, rgba(255,255,255,.018), transparent 54%); }
   .canvas-sheet::before, .canvas-sheet::after { position: absolute; z-index: 3; width: 9px; height: 9px; border-color: rgba(255,107,53,.85); content: ""; pointer-events: none; }

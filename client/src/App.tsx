@@ -1,5 +1,6 @@
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import AssetLibraryLayoutController from "./components/AssetLibraryLayoutController";
 import NotFound from "@/pages/NotFound";
 import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
@@ -33,6 +34,7 @@ export default function App() {
         <TooltipProvider>
           <Toaster richColors position="top-center" />
           <Router />
+          <AssetLibraryLayoutController />
           <InspectorLayoutController />
           <CanvasReferenceOverlay />
           <MeasurementUnitController />
