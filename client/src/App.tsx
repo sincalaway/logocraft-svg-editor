@@ -6,6 +6,7 @@ import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import EditorUtilityDock from "./components/EditorUtilityDock";
 import InspectorLayoutController from "./components/InspectorLayoutController";
+import InspectorLibraryQuickAccess from "./components/InspectorLibraryQuickAccess";
 import CanvasReferenceOverlay from "./components/CanvasReferenceOverlay";
 import GlobalCommandPalette from "./components/GlobalCommandPalette";
 import MeasurementUnitController from "./components/MeasurementUnitController";
@@ -36,6 +37,7 @@ export default function App() {
           <Router />
           <AssetLibraryLayoutController />
           <InspectorLayoutController />
+          <InspectorLibraryQuickAccess />
           <CanvasReferenceOverlay />
           <MeasurementUnitController />
           <EditorUtilityDock />

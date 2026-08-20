@@ -336,6 +336,9 @@
   .brand-plate > div:nth-child(2)::after { position: absolute; right: 0; bottom: .13rem; margin: 0; font-size: 7px; }
   .topbar > div:first-child::after { color: rgba(232,227,218,.72); font-size: 7px; letter-spacing: .15em; }
   .panel .section-label { color: #d8d3cc; letter-spacing: .2em; }
+  .inspector-library-button { min-width: 82px; border: 1px solid rgba(255,107,53,.62); color: #f8e7df; background: linear-gradient(90deg, rgba(255,107,53,.14), rgba(255,107,53,.035)); }
+  .inspector-library-button:hover { border-color: #ff6b35; background: rgba(255,107,53,.19); }
+  .inspector-library-quick-access { position: fixed; top: 75px; right: 52px; z-index: 77; min-height: 32px; box-shadow: 0 8px 18px rgba(0,0,0,.24); }
   .inspector-field label, .panel .technical-number { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; letter-spacing: .1em; }
   .inspector-field input, .inspector-field select { border-left-color: rgba(255,255,255,.14); box-shadow: inset 0 1px rgba(255,255,255,.025); }
   .paper-canvas { background-color: #fcf9f2; background-image: radial-gradient(rgba(49,44,38,.032) .5px, transparent .5px), linear-gradient(110deg, rgba(255,255,255,.72), rgba(255,251,244,.16) 55%, transparent 100%) !important; background-size: 7px 7px, 100% 100% !important; }
@@ -352,6 +355,7 @@
     .inspector-control-rail-tablet .inspector-width-button { border-top: 0; border-left: 1px solid rgba(255,255,255,.08); }
   }
   @media (max-width: 767px) { .inspector-control-rail { display: none; } }
+  @media (max-width: 1023px) { .inspector-library-quick-access { display: none; } }
   @media (prefers-reduced-motion: no-preference) { @keyframes inspector-drawer-in { from { opacity: 0; transform: translateX(14px); } to { opacity: 1; transform: translateX(0); } } }
   .command-palette { width: min(610px, calc(100vw - 2rem)); overflow: hidden; border-radius: 0; background: #202023; box-shadow: 0 30px 92px rgba(0,0,0,.68); }
   .command-palette-head { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,.1); padding: .58rem .75rem .52rem; background: linear-gradient(90deg, rgba(255,107,53,.1), transparent 46%); }
