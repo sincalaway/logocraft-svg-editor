@@ -2,7 +2,7 @@
 import { PanelRightClose, PanelRightOpen, SlidersHorizontal, X } from "lucide-react";
 import { KeyboardEvent as ReactKeyboardEvent, PointerEvent as ReactPointerEvent, useEffect, useMemo, useRef, useState } from "react";
 
-const INSPECTOR_PREFERENCE_KEY = "logocraft-inspector-layout-v1";
+const INSPECTOR_PREFERENCE_KEY = "logocraft-inspector-layout-v2";
 type DeviceProfile = "wide" | "desktop" | "tablet" | "compact";
 type InspectorPreference = { width: number; collapsed?: boolean };
 type InspectorPreferences = Partial<Record<DeviceProfile, InspectorPreference>>;

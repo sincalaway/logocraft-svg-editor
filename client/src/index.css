@@ -86,13 +86,17 @@
     .editor-shell > div > aside:last-child > div:last-child > button { min-height: 28px; margin-top: .35rem; }
   }
   @media (min-width: 1024px) {
-    .left-asset-tray { position: relative; min-width: 0; overflow: hidden; transition: width 220ms cubic-bezier(.23,1,.32,1), opacity 160ms ease, border-color 160ms ease; }
+    .left-asset-tray { position: relative; width: var(--asset-tray-width, 244px) !important; min-width: 0; overflow: hidden; transition: width 220ms cubic-bezier(.23,1,.32,1), opacity 160ms ease, border-color 160ms ease; }
     html[data-asset-tray-collapsed="true"] .left-asset-tray { width: 0 !important; border-right-color: transparent; opacity: 0; pointer-events: none; }
-    .asset-tray-control-rail { position: fixed; top: 73px; left: 291px; z-index: 46; display: block; transition: left 220ms cubic-bezier(.23,1,.32,1); }
+    .asset-tray-control-rail { position: fixed; top: 73px; left: calc(58px + var(--asset-tray-width, 244px) - 11px); z-index: 46; display: block; transition: left 220ms cubic-bezier(.23,1,.32,1); }
     html[data-asset-tray-collapsed="true"] .asset-tray-control-rail { left: 47px; }
     .asset-tray-rail-button { display: inline-flex; align-items: center; gap: .38rem; min-height: 34px; border: 1px solid rgba(255,255,255,.12); border-left: 2px solid #ff6b35; background: rgba(28,28,31,.96); padding: 0 .52rem; color: #aaa8aa; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 9px; font-weight: 800; letter-spacing: .05em; box-shadow: 7px 8px 18px rgba(0,0,0,.3), inset 0 1px rgba(255,255,255,.05); backdrop-filter: blur(14px); transition: color 160ms ease, background-color 160ms ease, transform 160ms ease; }
     .asset-tray-rail-button:hover { background: #29292d; color: #fff8f0; }
     .asset-tray-rail-button:active { transform: scale(.97); }
+    .asset-tray-resize-handle { position: fixed; top: 62px; bottom: 0; left: calc(58px + var(--asset-tray-width, 244px) - 5px); z-index: 45; width: 10px; cursor: col-resize; touch-action: none; }
+    .asset-tray-resize-handle::before { position: absolute; top: 50%; right: 4px; height: 52px; width: 1px; background: linear-gradient(180deg, transparent, rgba(255,107,53,.82) 25%, rgba(255,107,53,.82) 75%, transparent); box-shadow: 0 0 0 1px rgba(0,0,0,.35); content: ""; opacity: .45; transition: opacity 160ms ease, height 160ms ease; }
+    .asset-tray-resize-handle:hover::before, .asset-tray-resize-handle:focus-visible::before, html[data-asset-tray-resizing="true"] .asset-tray-resize-handle::before { height: 96px; opacity: 1; }
+    html[data-asset-tray-resizing="true"], html[data-asset-tray-resizing="true"] * { cursor: col-resize !important; user-select: none !important; }
   }
   .canvas-workbench { background-image: radial-gradient(circle at 50% 45%, rgba(255,248,238,.075), transparent 32%), linear-gradient(90deg, rgba(255,255,255,.018) 1px, transparent 1px), linear-gradient(rgba(255,255,255,.018) 1px, transparent 1px); background-size: auto, 56px 56px, 56px 56px; }
   .editor-shell > div > section > div:nth-child(2) { background-image: radial-gradient(ellipse 44% 42% at 50% 39%, rgba(255,248,238,.105), rgba(255,248,238,.026) 44%, transparent 72%); }
